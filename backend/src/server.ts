@@ -5,7 +5,7 @@ import express, { type Express, type Request, type Response } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 
-import { database } from "@/infrastructure";
+import { cache, database } from "@/infrastructure";
 import { Env } from "@/shared/config";
 import {
   errorHandler,
@@ -31,6 +31,7 @@ class App {
 
   public async start(): Promise<void> {
     await database.connect();
+    await cache.connect();
 
     this.server = this.app.listen(Env.port, Env.host, () => {
       Logger.info(`Servidor iniciado em http://${Env.host}:${Env.port}`);
@@ -130,6 +131,7 @@ class App {
     Logger.info(`Encerrando servidor: ${signal}`);
 
     if (!this.server) {
+      await cache.disconnect();
       await database.disconnect();
       process.exit(0);
     }
@@ -149,8 +151,7 @@ class App {
         process.exit(1);
       }
 
-      database
-        .disconnect()
+      Promise.all([cache.disconnect(), database.disconnect()])
         .then(() => {
           Logger.info("Servidor encerrado com sucesso");
           process.exit(0);

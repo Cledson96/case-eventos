@@ -10,6 +10,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    env: {
+      NODE_ENV: "test",
+    },
     globals: false,
     include: ["tests/**/*.test.ts"],
     coverage: {

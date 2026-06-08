@@ -7,6 +7,7 @@ import { Env } from "@/shared/config";
 
 export const logger = pino({
   level: Env.logLevel,
+  enabled: Env.nodeEnv !== "test",
   redact: {
     paths: [
       "req.headers.authorization",
