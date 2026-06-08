@@ -13,6 +13,14 @@ class EventsRoutes {
   }
 
   private setupRoutes(): void {
+    this.router.post(
+      "/:eventId/participants",
+      this.eventsController.subscribeParticipant.bind(this.eventsController)
+    );
+    this.router.get(
+      "/:eventId/participants",
+      this.eventsController.listParticipants.bind(this.eventsController)
+    );
     this.router.post("/", this.eventsController.create.bind(this.eventsController));
     this.router.get("/", this.eventsController.list.bind(this.eventsController));
     this.router.get("/:eventId", this.eventsController.findById.bind(this.eventsController));

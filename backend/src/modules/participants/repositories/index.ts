@@ -49,6 +49,19 @@ class ParticipantsRepository {
     return this.mapParticipant(participant);
   }
 
+  public async findById(id: string): Promise<ParticipantOutput | null> {
+    const participant = await database.client.participant.findUnique({
+      where: { id },
+      select: this.participantSelect,
+    });
+
+    if (!participant) {
+      return null;
+    }
+
+    return this.mapParticipant(participant);
+  }
+
   public async list(input: ListParticipantsInput): Promise<ListParticipantsOutput> {
     const where = this.buildWhere(input);
     const orderBy = this.buildOrderBy(input);

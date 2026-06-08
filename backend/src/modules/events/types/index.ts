@@ -27,3 +27,33 @@ export type ListEventsOutput = PaginatedResult<EventOutput>;
 export type FindEventByIdInput = {
   id: string;
 };
+
+export type SubscribeParticipantInput = {
+  eventId: string;
+  participantId: string;
+};
+
+export type EventParticipantSubscriptionOutput = {
+  eventId: string;
+  participantId: string;
+  createdAt: string;
+};
+
+export type EventParticipantOutput = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+  updatedAt: string;
+  registeredAt: string;
+};
+
+export type EventParticipantSortField = "createdAt" | "name" | "email";
+
+export type ListEventParticipantsInput = PaginationQuery & {
+  eventId: string;
+  sort: EventParticipantSortField;
+};
+
+export type ListEventParticipantsOutput = PaginatedResult<EventParticipantOutput>;

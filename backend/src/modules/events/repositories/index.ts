@@ -1,7 +1,17 @@
 import { database } from "@/infrastructure";
 import type { Prisma } from "@/generated/prisma/client";
 import { buildPaginationMeta } from "@/shared/utils";
-import type { CreateEventInput, EventOutput, ListEventsInput, ListEventsOutput } from "../types";
+import type {
+  CreateEventInput,
+  EventOutput,
+  EventParticipantOutput,
+  EventParticipantSubscriptionOutput,
+  ListEventParticipantsInput,
+  ListEventParticipantsOutput,
+  ListEventsInput,
+  ListEventsOutput,
+  SubscribeParticipantInput,
+} from "../types";
 
 type PersistedEvent = {
   id: string;
@@ -10,6 +20,24 @@ type PersistedEvent = {
   date: Date;
   createdAt: Date;
   updatedAt: Date;
+};
+
+type PersistedEventParticipant = {
+  eventId: string;
+  participantId: string;
+  createdAt: Date;
+};
+
+type PersistedEventParticipantWithParticipant = {
+  createdAt: Date;
+  participant: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
 };
 
 class EventsRepository {
@@ -116,4 +144,163 @@ class EventsRepository {
   }
 }
 
+class EventParticipantsRepository {
+  private readonly eventParticipantSelect = {
+    eventId: true,
+    participantId: true,
+    createdAt: true,
+  } satisfies Prisma.EventParticipantSelect;
+
+  private readonly eventParticipantWithParticipantSelect = {
+    createdAt: true,
+    participant: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    },
+  } satisfies Prisma.EventParticipantSelect;
+
+  public async create(
+    input: SubscribeParticipantInput
+  ): Promise<EventParticipantSubscriptionOutput> {
+    const eventParticipant = await database.client.eventParticipant.create({
+      data: input,
+      select: this.eventParticipantSelect,
+    });
+
+    return this.mapEventParticipant(eventParticipant);
+  }
+
+  public async findByIds(
+    input: SubscribeParticipantInput
+  ): Promise<EventParticipantSubscriptionOutput | null> {
+    const eventParticipant = await database.client.eventParticipant.findUnique({
+      where: {
+        eventId_participantId: input,
+      },
+      select: this.eventParticipantSelect,
+    });
+
+    if (!eventParticipant) {
+      return null;
+    }
+
+    return this.mapEventParticipant(eventParticipant);
+  }
+
+  public async listParticipantsByEventId(
+    input: ListEventParticipantsInput
+  ): Promise<ListEventParticipantsOutput> {
+    const where = this.buildWhere(input);
+    const orderBy = this.buildOrderBy(input);
+
+    const [total, eventParticipants] = await Promise.all([
+      database.client.eventParticipant.count({ where }),
+      database.client.eventParticipant.findMany({
+        where,
+        select: this.eventParticipantWithParticipantSelect,
+        skip: (input.page - 1) * input.limit,
+        take: input.limit,
+        orderBy,
+      }),
+    ]);
+
+    return {
+      data: eventParticipants.map((eventParticipant) =>
+        this.mapEventParticipantWithParticipant(eventParticipant)
+      ),
+      meta: buildPaginationMeta({
+        page: input.page,
+        limit: input.limit,
+        total,
+      }),
+    };
+  }
+
+  private mapEventParticipant(
+    eventParticipant: PersistedEventParticipant
+  ): EventParticipantSubscriptionOutput {
+    return {
+      eventId: eventParticipant.eventId,
+      participantId: eventParticipant.participantId,
+      createdAt: eventParticipant.createdAt.toISOString(),
+    };
+  }
+
+  private mapEventParticipantWithParticipant(
+    eventParticipant: PersistedEventParticipantWithParticipant
+  ): EventParticipantOutput {
+    return {
+      id: eventParticipant.participant.id,
+      name: eventParticipant.participant.name,
+      email: eventParticipant.participant.email,
+      phone: eventParticipant.participant.phone,
+      createdAt: eventParticipant.participant.createdAt.toISOString(),
+      updatedAt: eventParticipant.participant.updatedAt.toISOString(),
+      registeredAt: eventParticipant.createdAt.toISOString(),
+    };
+  }
+
+  private buildWhere(input: ListEventParticipantsInput): Prisma.EventParticipantWhereInput {
+    const participantWhere = this.buildParticipantWhere(input.search);
+
+    if (!participantWhere) {
+      return {
+        eventId: input.eventId,
+      };
+    }
+
+    return {
+      eventId: input.eventId,
+      participant: {
+        is: participantWhere,
+      },
+    };
+  }
+
+  private buildParticipantWhere(search?: string): Prisma.ParticipantWhereInput | undefined {
+    if (!search) {
+      return undefined;
+    }
+
+    return {
+      OR: [
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
+      ],
+    };
+  }
+
+  private buildOrderBy(
+    input: ListEventParticipantsInput
+  ): Prisma.EventParticipantOrderByWithRelationInput {
+    if (input.sort === "name") {
+      return {
+        participant: {
+          name: input.order,
+        },
+      };
+    }
+
+    if (input.sort === "email") {
+      return {
+        participant: {
+          email: input.order,
+        },
+      };
+    }
+
+    return {
+      createdAt: input.order,
+    };
+  }
+}
+
 export const eventsRepository = new EventsRepository();
+export const eventParticipantsRepository = new EventParticipantsRepository();

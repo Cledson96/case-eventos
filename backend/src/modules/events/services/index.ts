@@ -1,12 +1,17 @@
 import { cache } from "@/infrastructure";
-import { NotFoundError } from "@/shared/errors";
-import { eventsRepository } from "../repositories";
+import { ConflictError, NotFoundError } from "@/shared/errors";
+import { participantsRepository } from "@/modules/participants/repositories";
+import { eventParticipantsRepository, eventsRepository } from "../repositories";
 import type {
   CreateEventInput,
+  EventParticipantSubscriptionOutput,
   EventOutput,
   FindEventByIdInput,
+  ListEventParticipantsInput,
+  ListEventParticipantsOutput,
   ListEventsInput,
   ListEventsOutput,
+  SubscribeParticipantInput,
 } from "../types";
 
 class EventsService {
@@ -57,4 +62,63 @@ class EventsService {
   }
 }
 
+class EventParticipantsService {
+  public async subscribe(
+    input: SubscribeParticipantInput
+  ): Promise<EventParticipantSubscriptionOutput> {
+    const [event, participant] = await Promise.all([
+      eventsRepository.findById(input.eventId),
+      participantsRepository.findById(input.participantId),
+    ]);
+
+    if (!event) {
+      throw new NotFoundError("Evento nao encontrado");
+    }
+
+    if (!participant) {
+      throw new NotFoundError("Participante nao encontrado");
+    }
+
+    const existingEventParticipant = await eventParticipantsRepository.findByIds(input);
+
+    if (existingEventParticipant) {
+      throw new ConflictError("Participante ja inscrito neste evento");
+    }
+
+    const eventParticipant = await eventParticipantsRepository.create(input);
+    await cache.invalidateByPrefix("events:");
+
+    return eventParticipant;
+  }
+
+  public async listParticipants(
+    input: ListEventParticipantsInput
+  ): Promise<ListEventParticipantsOutput> {
+    const cacheKey = this.buildListCacheKey(input);
+    const cachedParticipants = await cache.get<ListEventParticipantsOutput>(cacheKey);
+
+    if (cachedParticipants) {
+      return cachedParticipants;
+    }
+
+    const event = await eventsRepository.findById(input.eventId);
+
+    if (!event) {
+      throw new NotFoundError("Evento nao encontrado");
+    }
+
+    const participants = await eventParticipantsRepository.listParticipantsByEventId(input);
+    await cache.set(cacheKey, participants);
+
+    return participants;
+  }
+
+  private buildListCacheKey(input: ListEventParticipantsInput): string {
+    const search = input.search ?? "";
+
+    return `events:${input.eventId}:participants:page=${input.page}:limit=${input.limit}:search=${search}:sort=${input.sort}:order=${input.order}`;
+  }
+}
+
 export const eventsService = new EventsService();
+export const eventParticipantsService = new EventParticipantsService();
