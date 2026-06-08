@@ -41,6 +41,10 @@ class App {
     this.configureGracefulShutdown();
   }
 
+  public get expressApp(): Express {
+    return this.app;
+  }
+
   private initializeMiddlewares(): void {
     this.app.use(requestContext);
     this.app.use(httpLogger);
@@ -166,4 +170,7 @@ class App {
   }
 }
 
-export default new App();
+const Server = new App();
+
+export const app = Server.expressApp;
+export default Server;
