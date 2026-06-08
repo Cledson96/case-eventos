@@ -4,25 +4,26 @@ import { paginationQuerySchema } from "@/shared/schemas";
 
 export const createParticipantBodySchema = z.object({
   name: z
-    .string()
+    .string({ error: "Nome e obrigatorio" })
     .trim()
     .min(1, "Nome e obrigatorio")
     .max(120, "Nome deve ter no maximo 120 caracteres"),
   email: z
-    .string()
+    .string({ error: "E-mail e obrigatorio" })
     .trim()
+    .min(1, "E-mail e obrigatorio")
     .email("E-mail invalido")
     .max(180, "E-mail deve ter no maximo 180 caracteres")
     .transform((email) => email.toLowerCase()),
   phone: z
-    .string()
+    .string({ error: "Telefone e obrigatorio" })
     .trim()
     .min(1, "Telefone e obrigatorio")
     .max(30, "Telefone deve ter no maximo 30 caracteres"),
 });
 
 export const listParticipantsQuerySchema = paginationQuerySchema.extend({
-  sort: z.enum(["createdAt", "name", "email"]).default("name"),
+  sort: z.enum(["createdAt", "name", "email"], { error: "Ordenacao invalida" }).default("name"),
 });
 
 export type CreateParticipantBody = z.infer<typeof createParticipantBodySchema>;

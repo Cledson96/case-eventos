@@ -12,6 +12,7 @@ import {
   notFoundHandler,
   requestContext,
   responseFormatter,
+  setupSwagger,
 } from "@/shared/middlewares";
 import { appRoutes } from "@/shared/routes";
 import { Logger, httpLogger } from "@/shared/utils";
@@ -65,6 +66,7 @@ class App {
     );
     this.app.use(express.json({ limit: Env.bodyLimit }));
     this.app.use(express.urlencoded({ extended: false, limit: Env.bodyLimit }));
+    setupSwagger(this.app);
     this.app.use(responseFormatter);
   }
 

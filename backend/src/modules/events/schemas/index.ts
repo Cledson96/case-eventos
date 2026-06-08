@@ -4,28 +4,40 @@ import { paginationQuerySchema } from "@/shared/schemas";
 
 export const createEventBodySchema = z.object({
   name: z
-    .string()
+    .string({ error: "Nome e obrigatorio" })
     .trim()
     .min(1, "Nome e obrigatorio")
     .max(120, "Nome deve ter no maximo 120 caracteres"),
-  description: z.string().trim().min(1, "Descricao e obrigatoria"),
-  date: z.coerce.date({ error: "Data invalida" }),
+  description: z
+    .string({ error: "Descricao e obrigatoria" })
+    .trim()
+    .min(1, "Descricao e obrigatoria"),
+  date: z
+    .unknown()
+    .refine((value) => value !== undefined && value !== null && value !== "", {
+      message: "Data e obrigatoria",
+    })
+    .pipe(z.coerce.date({ error: "Data invalida" })),
 });
 
 export const eventParamsSchema = z.object({
-  eventId: z.uuid("Id do evento invalido"),
+  eventId: z.string({ error: "Id do evento invalido" }).uuid("Id do evento invalido"),
 });
 
 export const subscribeParticipantBodySchema = z.object({
-  participantId: z.uuid("Id do participante invalido"),
+  participantId: z
+    .string({ error: "Id do participante e obrigatorio" })
+    .uuid("Id do participante invalido"),
 });
 
 export const listEventsQuerySchema = paginationQuerySchema.extend({
-  sort: z.enum(["createdAt", "date", "name"]).default("date"),
+  sort: z.enum(["createdAt", "date", "name"], { error: "Ordenacao invalida" }).default("date"),
 });
 
 export const listEventParticipantsQuerySchema = paginationQuerySchema.extend({
-  sort: z.enum(["createdAt", "name", "email"]).default("createdAt"),
+  sort: z
+    .enum(["createdAt", "name", "email"], { error: "Ordenacao invalida" })
+    .default("createdAt"),
 });
 
 export type CreateEventBody = z.infer<typeof createEventBodySchema>;
