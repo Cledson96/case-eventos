@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { eventsRoutes } from "@/modules/events";
+import { participantsRoutes } from "@/modules/participants";
 
 class AppRoutes {
   public readonly router: Router;
@@ -12,6 +13,7 @@ class AppRoutes {
 
   private setupRoutes(): void {
     this.router.use("/events", eventsRoutes);
+    this.router.use("/participants", participantsRoutes);
   }
 }
 

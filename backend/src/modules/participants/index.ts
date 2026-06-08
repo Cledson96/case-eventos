@@ -1,0 +1,1 @@
+export { participantsRoutes } from "./routes";
