@@ -5,6 +5,7 @@ import express, { type Express, type Request, type Response } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 
+import { database } from "@/infrastructure";
 import { Env } from "@/shared/config";
 import {
   errorHandler,
@@ -28,7 +29,9 @@ class App {
     this.initializeErrorHandling();
   }
 
-  public start(): void {
+  public async start(): Promise<void> {
+    await database.connect();
+
     this.server = this.app.listen(Env.port, Env.host, () => {
       Logger.info(`Servidor iniciado em http://${Env.host}:${Env.port}`);
     });
@@ -75,6 +78,11 @@ class App {
         return;
       }
 
+      if (!database.isConnected()) {
+        response.error("Banco de dados indisponivel", 503);
+        return;
+      }
+
       response.success({ status: "ready" }, "API pronta para receber requisicoes");
     });
 
@@ -99,29 +107,30 @@ class App {
 
   private configureGracefulShutdown(): void {
     process.on("SIGTERM", () => {
-      this.shutdown("SIGTERM");
+      void this.shutdown("SIGTERM");
     });
 
     process.on("SIGINT", () => {
-      this.shutdown("SIGINT");
+      void this.shutdown("SIGINT");
     });
 
     process.on("uncaughtException", (error: Error) => {
       Logger.error("Erro nao capturado", { error });
-      this.shutdown("uncaughtException");
+      void this.shutdown("uncaughtException");
     });
 
     process.on("unhandledRejection", (reason: unknown) => {
       Logger.error("Promise rejeitada sem tratamento", { reason });
-      this.shutdown("unhandledRejection");
+      void this.shutdown("unhandledRejection");
     });
   }
 
-  private shutdown(signal: string): void {
+  private async shutdown(signal: string): Promise<void> {
     this.isShuttingDown = true;
     Logger.info(`Encerrando servidor: ${signal}`);
 
     if (!this.server) {
+      await database.disconnect();
       process.exit(0);
     }
 
@@ -140,8 +149,16 @@ class App {
         process.exit(1);
       }
 
-      Logger.info("Servidor encerrado com sucesso");
-      process.exit(0);
+      database
+        .disconnect()
+        .then(() => {
+          Logger.info("Servidor encerrado com sucesso");
+          process.exit(0);
+        })
+        .catch((disconnectError: unknown) => {
+          Logger.error("Erro ao desconectar banco de dados", { error: disconnectError });
+          process.exit(1);
+        });
     });
   }
 }
