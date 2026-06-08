@@ -7,6 +7,7 @@ import type { Event } from "@/types";
 import { AppDate } from "@/utils/date";
 import { extractErrorStatus } from "@/utils/error";
 import { ParticipantList } from "./components/ParticipantList";
+import { SubscribeParticipantForm } from "./components/SubscribeParticipantForm";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,11 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       </header>
 
       <p className="whitespace-pre-line text-zinc-700 dark:text-zinc-300">{event.description}</p>
+
+      <section className="mt-10">
+        <h2 className="mb-4 text-lg font-semibold">Inscrever participante</h2>
+        <SubscribeParticipantForm eventId={eventId} />
+      </section>
 
       <section className="mt-10">
         <h2 className="mb-4 text-lg font-semibold">Participantes</h2>
