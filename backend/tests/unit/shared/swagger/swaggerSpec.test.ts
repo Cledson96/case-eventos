@@ -9,6 +9,15 @@ const swaggerSpecSchema = z.object({
     title: z.string(),
     version: z.string(),
   }),
+  components: z.object({
+    securitySchemes: z.object({
+      bearerAuth: z.object({
+        type: z.string(),
+        scheme: z.string(),
+      }),
+    }),
+  }),
+  security: z.array(z.record(z.string(), z.array(z.unknown()))),
   paths: z.record(z.string(), z.unknown()),
 });
 
@@ -53,6 +62,9 @@ describe("SwaggerSpec", () => {
 
     expect(spec.openapi).toBe("3.0.0");
     expect(spec.info.title).toBe("Case Eventos API");
+    expect(spec.components.securitySchemes.bearerAuth.type).toBe("http");
+    expect(spec.components.securitySchemes.bearerAuth.scheme).toBe("bearer");
+    expect(spec.security).toContainEqual({ bearerAuth: [] });
     expect(spec.paths).toHaveProperty("/events");
     expect(spec.paths).toHaveProperty("/events/{eventId}");
     expect(spec.paths).toHaveProperty("/events/{eventId}/participants");

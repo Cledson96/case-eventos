@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { participantsService } from "@/modules/participants/services";
 import { app } from "@/server";
 import { ConflictError } from "@/shared/errors";
+import { authHeader } from "./helpers/auth";
 
 vi.mock("@/modules/participants/services", () => ({
   participantsService: {
@@ -31,6 +32,7 @@ describe("Participants HTTP", () => {
 
     const response = await request(app)
       .post("/participants")
+      .set(authHeader)
       .send({
         name: "Ana Souza",
         email: "ANA@EMAIL.COM",
@@ -49,7 +51,7 @@ describe("Participants HTTP", () => {
   });
 
   it("deve retornar 400 ao criar participante sem campos obrigatorios", async () => {
-    const response = await request(app).post("/participants").send({}).expect(400);
+    const response = await request(app).post("/participants").set(authHeader).send({}).expect(400);
 
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe("Dados da requisicao invalidos");
@@ -67,6 +69,7 @@ describe("Participants HTTP", () => {
 
     const response = await request(app)
       .post("/participants")
+      .set(authHeader)
       .send({
         name: "Ana Souza",
         email: "ana@email.com",
@@ -92,6 +95,7 @@ describe("Participants HTTP", () => {
 
     const response = await request(app)
       .get("/participants?page=1&limit=20&search=ana&sort=email&order=asc")
+      .set(authHeader)
       .expect(200);
 
     expect(response.body.success).toBe(true);

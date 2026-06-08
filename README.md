@@ -57,6 +57,7 @@ Variaveis principais:
 
 ```env
 PORT=3333
+API_TOKEN=case-eventos-dev-token
 DATABASE_URL=postgresql://case_eventos:case_eventos@localhost:5432/case_eventos?schema=public
 REDIS_URL=redis://localhost:6379
 CACHE_TTL_SECONDS=60
@@ -98,6 +99,18 @@ A API ficara disponivel em:
 - `http://localhost:3333/health`
 - `http://localhost:3333/docs`
 - `http://localhost:3333/docs.json`
+
+## Autenticacao
+
+As rotas de dominio usam Bearer token configurado por `API_TOKEN`.
+
+Envie o header:
+
+```txt
+Authorization: Bearer case-eventos-dev-token
+```
+
+Health checks e documentacao ficam acessiveis sem token.
 
 ## Endpoints
 

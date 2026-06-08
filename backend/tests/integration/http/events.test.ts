@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { app } from "@/server";
 import { eventParticipantsService, eventsService } from "@/modules/events/services";
 import { ConflictError, NotFoundError } from "@/shared/errors";
+import { authHeader } from "./helpers/auth";
 
 vi.mock("@/modules/events/services", () => ({
   eventsService: {
@@ -46,6 +47,7 @@ describe("Events HTTP", () => {
 
     const response = await request(app)
       .post("/events")
+      .set(authHeader)
       .send({
         name: "Tech Summit",
         description: "Evento de tecnologia",
@@ -64,7 +66,7 @@ describe("Events HTTP", () => {
   });
 
   it("deve retornar 400 ao criar evento sem campos obrigatorios", async () => {
-    const response = await request(app).post("/events").send({}).expect(400);
+    const response = await request(app).post("/events").set(authHeader).send({}).expect(400);
 
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe("Dados da requisicao invalidos");
@@ -90,6 +92,7 @@ describe("Events HTTP", () => {
 
     const response = await request(app)
       .get("/events?page=1&limit=20&search=tech&sort=name&order=asc")
+      .set(authHeader)
       .expect(200);
 
     expect(response.body.success).toBe(true);
@@ -107,7 +110,10 @@ describe("Events HTTP", () => {
   it("deve retornar 404 quando evento nao existir", async () => {
     vi.mocked(eventsService.findById).mockRejectedValue(new NotFoundError("Evento nao encontrado"));
 
-    const response = await request(app).get(`/events/${eventOutput.id}`).expect(404);
+    const response = await request(app)
+      .get(`/events/${eventOutput.id}`)
+      .set(authHeader)
+      .expect(404);
 
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe("Evento nao encontrado");
@@ -121,6 +127,7 @@ describe("Events HTTP", () => {
 
     const response = await request(app)
       .post(`/events/${eventOutput.id}/participants`)
+      .set(authHeader)
       .send({ participantId: participantOutput.id })
       .expect(409);
 
@@ -142,6 +149,7 @@ describe("Events HTTP", () => {
 
     const response = await request(app)
       .get(`/events/${eventOutput.id}/participants?page=1&limit=20&sort=email&order=asc`)
+      .set(authHeader)
       .expect(200);
 
     expect(response.body.success).toBe(true);

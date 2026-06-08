@@ -17,7 +17,16 @@ const options: swaggerJsdoc.Options = {
           Env.nodeEnv === "production" ? "Servidor de Producao" : "Servidor de Desenvolvimento",
       },
     ],
+    security: [{ bearerAuth: [] }],
     components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "API Token",
+          description: "Token enviado no header Authorization como Bearer <token>.",
+        },
+      },
       schemas: {
         Success: {
           type: "object",
