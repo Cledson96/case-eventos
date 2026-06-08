@@ -2,7 +2,7 @@
 
 Aplicacao para gerenciamento de eventos e participantes.
 
-Status atual: backend implementado em `backend/`.
+Status atual: backend implementado em `backend/` e frontend implementado em `frontend/`.
 
 ## Stack
 
@@ -16,6 +16,16 @@ Status atual: backend implementado em `backend/`.
 - Supertest
 - Swagger/OpenAPI
 
+Frontend:
+
+- Next.js 16 (App Router)
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- Axios
+- dayjs
+- Vitest e Testing Library
+
 ## Estrutura
 
 ```txt
@@ -28,6 +38,12 @@ backend/
       participants/
     shared/
   tests/
+frontend/
+  src/
+    app/
+    components/
+    services/
+    lib/
 docker-compose.yml
 ```
 
@@ -99,6 +115,20 @@ A API ficara disponivel em:
 - `http://localhost:3333/health`
 - `http://localhost:3333/docs`
 - `http://localhost:3333/docs.json`
+
+## Frontend
+
+Com o backend em execucao, rode a interface web:
+
+```bash
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+O frontend ficara disponivel em `http://localhost:3000`. O `API_TOKEN` do
+`.env.local` deve ser igual ao do backend. Detalhes em `frontend/README.md`.
 
 ## Autenticacao
 
