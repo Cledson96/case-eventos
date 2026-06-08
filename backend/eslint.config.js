@@ -26,6 +26,7 @@ export default tseslint.config(
         },
       ],
       "@typescript-eslint/no-non-null-assertion": "error",
+      "@typescript-eslint/no-namespace": "off",
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
