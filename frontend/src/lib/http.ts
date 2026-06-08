@@ -1,6 +1,6 @@
 import "server-only";
 
-import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from "axios";
+import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 
 import { getApiConfig } from "@/config/env";
 
@@ -9,10 +9,6 @@ export type ApiEnvelope<T> = {
   message: string;
   data: T;
   timestamp: string;
-};
-
-type ApiErrorPayload = {
-  message?: string;
 };
 
 class HttpClient {
@@ -51,21 +47,3 @@ class HttpClient {
 }
 
 export const httpClient = new HttpClient();
-
-export function getErrorMessage(error: unknown, fallback = "Erro inesperado"): string {
-  if (error instanceof AxiosError) {
-    const payload = error.response?.data as ApiErrorPayload | undefined;
-
-    if (payload?.message) {
-      return payload.message;
-    }
-
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallback;
-}
