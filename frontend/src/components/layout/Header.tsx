@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { buttonPrimary } from "@/components/ui/styles";
 import { BrandMark } from "./BrandMark";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navLinks = [{ href: "/events", label: "Eventos" }];
 
@@ -41,6 +42,8 @@ export function Header() {
               </Link>
             );
           })}
+
+          <ThemeToggle />
 
           <Link href="/events/new" className={buttonPrimary}>
             Criar evento

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -23,17 +25,15 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 
-    --brand: oklch(0.75 0.15 75);
-    --brand-hover: oklch(0.81 0.13 78);
-    --brand-strong: oklch(0.82 0.13 80);
-    --brand-contrast: #1b1206;
-    --brand-soft: oklch(0.26 0.05 72);
-  }
+  --brand: oklch(0.75 0.15 75);
+  --brand-hover: oklch(0.81 0.13 78);
+  --brand-strong: oklch(0.82 0.13 80);
+  --brand-contrast: #1b1206;
+  --brand-soft: oklch(0.26 0.05 72);
 }
 
 body {
