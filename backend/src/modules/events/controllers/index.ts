@@ -1,20 +1,25 @@
-import type { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request } from "express";
 
+import type { ValidatedResponse } from "@/shared/middlewares";
 import { Logger } from "@/shared/utils";
-import {
-  createEventBodySchema,
-  eventParamsSchema,
-  listEventParticipantsQuerySchema,
-  listEventsQuerySchema,
-  subscribeParticipantBodySchema,
+import type {
+  CreateEventBody,
+  EventParams,
+  ListEventParticipantsQuery,
+  ListEventsQuery,
+  SubscribeParticipantBody,
 } from "../schemas";
 import { eventParticipantsService, eventsService } from "../services";
 
 export class EventsController {
-  public async create(request: Request, response: Response, next: NextFunction): Promise<void> {
+  public async create(
+    request: Request,
+    response: ValidatedResponse<CreateEventBody>,
+    next: NextFunction
+  ): Promise<void> {
     try {
-      const input = createEventBodySchema.parse(request.body);
-      const event = await eventsService.create(input);
+      const { body } = response.locals.validatedRequest;
+      const event = await eventsService.create(body);
 
       response.created(event, "Evento criado com sucesso");
     } catch (error) {
@@ -26,9 +31,13 @@ export class EventsController {
     }
   }
 
-  public async list(request: Request, response: Response, next: NextFunction): Promise<void> {
+  public async list(
+    request: Request,
+    response: ValidatedResponse<unknown, ListEventsQuery>,
+    next: NextFunction
+  ): Promise<void> {
     try {
-      const query = listEventsQuerySchema.parse(request.query);
+      const { query } = response.locals.validatedRequest;
       const events = await eventsService.list(query);
 
       response.success(events, "Eventos listados com sucesso");
@@ -41,9 +50,13 @@ export class EventsController {
     }
   }
 
-  public async findById(request: Request, response: Response, next: NextFunction): Promise<void> {
+  public async findById(
+    request: Request,
+    response: ValidatedResponse<unknown, unknown, EventParams>,
+    next: NextFunction
+  ): Promise<void> {
     try {
-      const params = eventParamsSchema.parse(request.params);
+      const { params } = response.locals.validatedRequest;
       const event = await eventsService.findById({ id: params.eventId });
 
       response.success(event, "Evento encontrado com sucesso");
@@ -58,12 +71,11 @@ export class EventsController {
 
   public async subscribeParticipant(
     request: Request,
-    response: Response,
+    response: ValidatedResponse<SubscribeParticipantBody, unknown, EventParams>,
     next: NextFunction
   ): Promise<void> {
     try {
-      const params = eventParamsSchema.parse(request.params);
-      const body = subscribeParticipantBodySchema.parse(request.body);
+      const { body, params } = response.locals.validatedRequest;
       const eventParticipant = await eventParticipantsService.subscribe({
         eventId: params.eventId,
         participantId: body.participantId,
@@ -81,12 +93,11 @@ export class EventsController {
 
   public async listParticipants(
     request: Request,
-    response: Response,
+    response: ValidatedResponse<unknown, ListEventParticipantsQuery, EventParams>,
     next: NextFunction
   ): Promise<void> {
     try {
-      const params = eventParamsSchema.parse(request.params);
-      const query = listEventParticipantsQuerySchema.parse(request.query);
+      const { query, params } = response.locals.validatedRequest;
       const participants = await eventParticipantsService.listParticipants({
         ...query,
         eventId: params.eventId,

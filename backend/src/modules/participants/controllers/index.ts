@@ -1,14 +1,19 @@
-import type { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request } from "express";
 
+import type { ValidatedResponse } from "@/shared/middlewares";
 import { Logger } from "@/shared/utils";
-import { createParticipantBodySchema, listParticipantsQuerySchema } from "../schemas";
+import type { CreateParticipantBody, ListParticipantsQuery } from "../schemas";
 import { participantsService } from "../services";
 
 export class ParticipantsController {
-  public async create(request: Request, response: Response, next: NextFunction): Promise<void> {
+  public async create(
+    request: Request,
+    response: ValidatedResponse<CreateParticipantBody>,
+    next: NextFunction
+  ): Promise<void> {
     try {
-      const input = createParticipantBodySchema.parse(request.body);
-      const participant = await participantsService.create(input);
+      const { body } = response.locals.validatedRequest;
+      const participant = await participantsService.create(body);
 
       response.created(participant, "Participante criado com sucesso");
     } catch (error) {
@@ -20,9 +25,13 @@ export class ParticipantsController {
     }
   }
 
-  public async list(request: Request, response: Response, next: NextFunction): Promise<void> {
+  public async list(
+    request: Request,
+    response: ValidatedResponse<unknown, ListParticipantsQuery>,
+    next: NextFunction
+  ): Promise<void> {
     try {
-      const query = listParticipantsQuerySchema.parse(request.query);
+      const { query } = response.locals.validatedRequest;
       const participants = await participantsService.list(query);
 
       response.success(participants, "Participantes listados com sucesso");
