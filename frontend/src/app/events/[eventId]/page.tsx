@@ -77,7 +77,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         </section>
 
         <aside>
-          <div className="rounded-xl border border-black/10 p-5 lg:sticky lg:top-20 dark:border-white/15">
+          <div className="rounded-xl border border-border p-5 lg:sticky lg:top-20">
             <Typography variant="subsection">Inscrever participante</Typography>
             <Typography variant="body-muted" className="mb-4 mt-1">
               Adicione alguem a lista deste evento.

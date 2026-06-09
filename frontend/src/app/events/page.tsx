@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageContainer } from "@/components/layout/PageContainer";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Typography } from "@/components/ui/Typography";
 import { buttonPrimary } from "@/components/ui/styles";
 import { eventsService } from "@/services/events";
-import { EmptyState } from "./components/EmptyState";
 import { EventCard } from "./components/EventCard";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,10 @@ export default async function EventsPage() {
       </div>
 
       {events.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          description="Nenhum evento cadastrado ainda."
+          action={{ href: "/events/new", label: "Criar o primeiro evento" }}
+        />
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
           {events.map((event) => (

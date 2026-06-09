@@ -129,7 +129,7 @@ export function CreateEventForm() {
           <Typography as="p" variant="label" className="mb-2 text-zinc-500">
             Previa
           </Typography>
-          <div className="flex gap-4 rounded-xl border border-black/10 p-5 dark:border-white/15">
+          <div className="flex gap-4 rounded-xl border border-border p-5">
             {values.date ? (
               <DateTile date={values.date} />
             ) : (

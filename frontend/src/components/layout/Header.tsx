@@ -13,7 +13,7 @@ export function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-black/10 bg-background dark:border-white/10">
+    <header className="sticky top-0 z-30 border-b border-border bg-background">
       <nav className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-3">
         <Link
           href="/"

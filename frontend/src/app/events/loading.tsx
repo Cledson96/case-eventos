@@ -10,10 +10,7 @@ export default function Loading() {
 
       <ul className="grid gap-4 sm:grid-cols-2">
         {Array.from({ length: 6 }).map((_, index) => (
-          <li
-            key={index}
-            className="flex gap-4 rounded-xl border border-black/10 p-5 dark:border-white/15"
-          >
+          <li key={index} className="flex gap-4 rounded-xl border border-border p-5">
             <div className="size-14 shrink-0 animate-pulse rounded-lg bg-black/10 dark:bg-white/10" />
             <div className="flex-1 space-y-2 py-1">
               <div className="h-4 w-2/3 animate-pulse rounded bg-black/10 dark:bg-white/10" />

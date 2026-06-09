@@ -10,7 +10,7 @@ export function EventCard({ event }: { event: Event }) {
     <li>
       <Link
         href={`/events/${event.id}`}
-        className="group flex h-full gap-4 rounded-xl border border-black/10 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-brand hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-white/15 dark:hover:border-brand"
+        className="group flex h-full gap-4 rounded-xl border border-border p-5 transition duration-200 hover:-translate-y-0.5 hover:border-brand hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <DateTile date={event.date} />
 

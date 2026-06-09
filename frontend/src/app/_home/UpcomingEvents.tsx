@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Typography } from "@/components/ui/Typography";
 import type { Event } from "@/types";
 import { UpcomingEventItem } from "./UpcomingEventItem";
@@ -17,15 +18,10 @@ export function UpcomingEvents({ events }: { events: Event[] }) {
       </div>
 
       {events.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-black/15 p-8 text-center dark:border-white/20">
-          <Typography variant="body-muted">Nenhum evento proximo no momento.</Typography>
-          <Link
-            href="/events/new"
-            className="mt-3 inline-block text-sm font-medium hover:underline"
-          >
-            Criar um evento
-          </Link>
-        </div>
+        <EmptyState
+          description="Nenhum evento proximo no momento."
+          action={{ href: "/events/new", label: "Criar um evento" }}
+        />
       ) : (
         <ul className="flex flex-col">
           {events.map((event, index) => (

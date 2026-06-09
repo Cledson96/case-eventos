@@ -7,7 +7,7 @@ import { AppDate } from "@/utils/date";
 export function UpcomingEventItem({ event, index }: { event: Event; index: number }) {
   return (
     <li
-      className="animate-reveal border-b border-black/10 last:border-0 dark:border-white/10"
+      className="animate-reveal border-b border-border last:border-0"
       style={{ animationDelay: `${0.08 + index * 0.07}s` }}
     >
       <Link

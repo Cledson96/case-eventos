@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Typography } from "@/components/ui/Typography";
 import type { EventParticipant } from "@/types";
 import { AppDate } from "@/utils/date";
@@ -18,17 +19,15 @@ function getInitials(name: string): string {
 export function ParticipantList({ participants }: { participants: EventParticipant[] }) {
   if (participants.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-black/15 p-8 text-center dark:border-white/20">
-        <Typography variant="body-muted">Nenhum participante inscrito ainda.</Typography>
-        <Typography variant="body-muted" className="mt-1">
-          Use o formulario para adicionar o primeiro.
-        </Typography>
-      </div>
+      <EmptyState
+        description="Nenhum participante inscrito ainda."
+        hint="Use o formulario para adicionar o primeiro."
+      />
     );
   }
 
   return (
-    <ul className="divide-y divide-black/10 dark:divide-white/10">
+    <ul className="divide-y divide-border">
       {participants.map((participant) => (
         <li key={participant.id} className="flex items-center gap-3 py-3">
           <div
