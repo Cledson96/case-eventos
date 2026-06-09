@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackLink } from "@/components/layout/BackLink";
 import { DateTile } from "@/components/ui/DateTile";
 import { eventsService } from "@/services/events";
 import type { Event } from "@/types";
@@ -43,25 +43,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-8">
-      <Link
-        href="/events"
-        className="inline-flex items-center gap-1 text-sm text-zinc-600 transition-colors hover:text-foreground dark:text-zinc-400 dark:hover:text-foreground"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-        Eventos
-      </Link>
+      <BackLink href="/events" label="Eventos" />
 
       <header className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
         <DateTile date={event.date} size="lg" />
