@@ -103,6 +103,12 @@ Execute as migrations:
 npm run db:migrate
 ```
 
+Opcionalmente, gere dados de teste:
+
+```bash
+npm run db:seed
+```
+
 Inicie a API em desenvolvimento:
 
 ```bash
@@ -205,6 +211,7 @@ npm run test:coverage
 npm run db:generate
 npm run db:migrate
 npm run db:deploy
+npm run db:seed
 npm run db:studio
 ```
 
