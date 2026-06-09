@@ -263,6 +263,7 @@ jobs:
           BODY_LIMIT: ${{ vars.BODY_LIMIT || '10mb' }}
           LOG_LEVEL: ${{ vars.LOG_LEVEL || 'info' }}
           CACHE_TTL_SECONDS: ${{ vars.CACHE_TTL_SECONDS || '60' }}
+          RUN_SEED_ON_DEPLOY: ${{ vars.RUN_SEED_ON_DEPLOY || 'false' }}
           POSTGRES_USER: ${{ vars.POSTGRES_USER || 'case_eventos' }}
           POSTGRES_DB: ${{ vars.POSTGRES_DB || 'case_eventos' }}
           CERTBOT_EMAIL: ${{ vars.CERTBOT_EMAIL || secrets.CERTBOT_EMAIL || '' }}
@@ -324,6 +325,7 @@ jobs:
           DATABASE_URL=${database_url}
           REDIS_URL=redis://redis:6379
           CACHE_TTL_SECONDS=${CACHE_TTL_SECONDS}
+          RUN_SEED_ON_DEPLOY=${RUN_SEED_ON_DEPLOY}
           EOF
 
           cat > /tmp/case-eventos.frontend.env << EOF

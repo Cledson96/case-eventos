@@ -163,6 +163,7 @@ API_TOKEN=case-eventos-dev-token
 CACHE_TTL_SECONDS=60
 FRONTEND_API_URL=http://backend:3333
 FRONTEND_BUILD_API_URL=http://backend:3333
+RUN_SEED_ON_DEPLOY=false
 ```
 
 ## Deploy VPS com GitHub Actions
@@ -231,9 +232,10 @@ FRONTEND_PORT=3001
 BACKEND_PORT=3334
 FRONTEND_PUBLIC_URL=https://eventos-dev.seudominio.com
 ALLOWED_ORIGINS=https://eventos-dev.seudominio.com
+RUN_SEED_ON_DEPLOY=true
 ```
 
-Para `production`, use outro `DEPLOY_PATH`, outro `COMPOSE_PROJECT_NAME` e dominios de producao. O usuario SSH precisa ter permissao de `sudo` para instalar e gerenciar Docker, nginx e certbot. Antes do primeiro deploy com TLS, os registros DNS dos dominios devem apontar para a VPS e a porta `80` deve estar liberada.
+Para `production`, use outro `DEPLOY_PATH`, outro `COMPOSE_PROJECT_NAME` e dominios de producao. Se quiser popular o ambiente de producao/demo com os dados fake do seed, configure `RUN_SEED_ON_DEPLOY=true`; caso contrario, deixe `false`. O usuario SSH precisa ter permissao de `sudo` para instalar e gerenciar Docker, nginx e certbot. Antes do primeiro deploy com TLS, os registros DNS dos dominios devem apontar para a VPS e a porta `80` deve estar liberada.
 
 ## Frontend
 
