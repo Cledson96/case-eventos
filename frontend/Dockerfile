@@ -6,15 +6,13 @@ COPY package*.json ./
 RUN npm ci
 
 ARG API_URL=http://localhost:3333
-ARG API_TOKEN=case-eventos-dev-token
 
 ENV API_URL=$API_URL
-ENV API_TOKEN=$API_TOKEN
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY . .
 
-RUN npm run build
+RUN API_TOKEN=case-eventos-build-token npm run build
 
 FROM node:22-alpine AS runner
 

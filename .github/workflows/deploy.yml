@@ -213,7 +213,6 @@ jobs:
           tags: ${{ steps.images.outputs.frontend_tags }}
           build-args: |
             API_URL=http://localhost:3333
-            API_TOKEN=case-eventos-build-token
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
