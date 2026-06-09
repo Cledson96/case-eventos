@@ -10,6 +10,7 @@ type StoredValue = {
 
 class FakeRedisClient {
   public readonly values = new Map<string, StoredValue>();
+  private scanSnapshot: string[] | null = null;
   public connected = false;
 
   public async connect(): Promise<void> {
@@ -29,12 +30,38 @@ class FakeRedisClient {
     return "OK";
   }
 
-  public async keys(pattern: string): Promise<string[]> {
+  public keys = vi.fn(async (pattern: string): Promise<string[]> => {
     const prefix = pattern.replace("*", "");
     return [...this.values.keys()].filter((key) => key.startsWith(prefix));
-  }
+  });
 
-  public async del(...keys: string[]): Promise<number> {
+  public scan = vi.fn(
+    async (
+      cursor: string,
+      _matchCommand: "MATCH",
+      pattern: string,
+      _countCommand: "COUNT",
+      count: number
+    ): Promise<[string, string[]]> => {
+      if (cursor === "0") {
+        const prefix = pattern.replace("*", "");
+        this.scanSnapshot = [...this.values.keys()].filter((key) => key.startsWith(prefix));
+      }
+
+      const keys = this.scanSnapshot ?? [];
+      const start = Number(cursor);
+      const batch = keys.slice(start, start + count);
+      const nextCursor = start + count >= keys.length ? "0" : String(start + count);
+
+      if (nextCursor === "0") {
+        this.scanSnapshot = null;
+      }
+
+      return [nextCursor, batch];
+    }
+  );
+
+  public del = vi.fn(async (...keys: string[]): Promise<number> => {
     let total = 0;
 
     for (const key of keys) {
@@ -44,7 +71,7 @@ class FakeRedisClient {
     }
 
     return total;
-  }
+  });
 }
 
 describe("RedisCache", () => {
@@ -84,6 +111,8 @@ describe("RedisCache", () => {
     const cache = new RedisCache({
       redisUrl: "redis://localhost:6379",
       ttlSeconds: 60,
+      scanCount: 1,
+      deleteBatchSize: 1,
       clientFactory: () => client,
     });
 
@@ -96,6 +125,11 @@ describe("RedisCache", () => {
     expect(await cache.get("events:list:1")).toBeNull();
     expect(await cache.get("events:detail:1")).toBeNull();
     expect(await cache.get("participants:list:1")).toEqual({ id: "participant-1" });
+    expect(client.keys).not.toHaveBeenCalled();
+    expect(client.scan).toHaveBeenCalledWith("0", "MATCH", "events:*", "COUNT", 1);
+    expect(client.scan).toHaveBeenCalledWith("1", "MATCH", "events:*", "COUNT", 1);
+    expect(client.del).toHaveBeenNthCalledWith(1, "events:list:1");
+    expect(client.del).toHaveBeenNthCalledWith(2, "events:detail:1");
   });
 
   it("deve ignorar falhas do Redis e manter a aplicacao funcional", async () => {
@@ -108,6 +142,7 @@ describe("RedisCache", () => {
         get: vi.fn(),
         set: vi.fn(),
         keys: vi.fn(),
+        scan: vi.fn(),
         del: vi.fn(),
       }),
     });

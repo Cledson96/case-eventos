@@ -8,19 +8,32 @@ type CacheClient = {
   quit(): Promise<unknown>;
   get(key: string): Promise<string | null>;
   set(key: string, value: string, mode: "EX", ttl: number): Promise<unknown>;
-  keys(pattern: string): Promise<string[]>;
+  scan(
+    cursor: string,
+    matchCommand: "MATCH",
+    pattern: string,
+    countCommand: "COUNT",
+    count: number
+  ): Promise<[string, string[]]>;
   del(...keys: string[]): Promise<number>;
 };
 
 type RedisCacheOptions = {
   redisUrl: string | undefined;
   ttlSeconds: number;
+  scanCount?: number;
+  deleteBatchSize?: number;
   clientFactory?: () => CacheClient;
 };
+
+const DEFAULT_SCAN_COUNT = 100;
+const DEFAULT_DELETE_BATCH_SIZE = 100;
 
 export class RedisCache {
   private readonly redisUrl: string | undefined;
   private readonly ttlSeconds: number;
+  private readonly scanCount: number;
+  private readonly deleteBatchSize: number;
   private readonly clientFactory: () => CacheClient;
   private client: CacheClient | null = null;
   private enabled = false;
@@ -28,6 +41,8 @@ export class RedisCache {
   public constructor(options: RedisCacheOptions) {
     this.redisUrl = options.redisUrl;
     this.ttlSeconds = options.ttlSeconds;
+    this.scanCount = Math.max(1, options.scanCount ?? DEFAULT_SCAN_COUNT);
+    this.deleteBatchSize = Math.max(1, options.deleteBatchSize ?? DEFAULT_DELETE_BATCH_SIZE);
     this.clientFactory =
       options.clientFactory ??
       (() =>
@@ -115,15 +130,32 @@ export class RedisCache {
     }
 
     try {
-      const keys = await this.client.keys(`${prefix}*`);
+      let cursor = "0";
 
-      if (keys.length === 0) {
-        return;
-      }
+      do {
+        const [nextCursor, keys] = await this.client.scan(
+          cursor,
+          "MATCH",
+          `${prefix}*`,
+          "COUNT",
+          this.scanCount
+        );
 
-      await this.client.del(...keys);
+        await this.deleteKeys(this.client, keys);
+        cursor = nextCursor;
+      } while (cursor !== "0");
     } catch (error) {
       Logger.warn("Erro ao invalidar cache por prefixo", { prefix, error });
+    }
+  }
+
+  private async deleteKeys(client: CacheClient, keys: string[]): Promise<void> {
+    for (let index = 0; index < keys.length; index += this.deleteBatchSize) {
+      const batch = keys.slice(index, index + this.deleteBatchSize);
+
+      if (batch.length > 0) {
+        await client.del(...batch);
+      }
     }
   }
 }
