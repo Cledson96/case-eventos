@@ -16,6 +16,7 @@ vi.mock("@/infrastructure", () => ({
 vi.mock("@/modules/events/repositories", () => ({
   eventsRepository: {
     create: vi.fn(),
+    delete: vi.fn(),
     findById: vi.fn(),
     list: vi.fn(),
   },
@@ -89,6 +90,29 @@ describe("EventsService", () => {
     await expect(eventsService.findById({ id: eventOutput.id })).rejects.toBeInstanceOf(
       NotFoundError
     );
+  });
+
+  it("deve excluir evento existente e invalidar caches de eventos", async () => {
+    vi.mocked(eventsRepository.findById).mockResolvedValue(eventOutput);
+    vi.mocked(eventsRepository.delete).mockResolvedValue(eventOutput);
+
+    const result = await eventsService.delete({ id: eventOutput.id });
+
+    expect(result).toEqual(eventOutput);
+    expect(eventsRepository.findById).toHaveBeenCalledWith(eventOutput.id);
+    expect(eventsRepository.delete).toHaveBeenCalledWith(eventOutput.id);
+    expect(cache.invalidateByPrefix).toHaveBeenCalledWith("events:");
+  });
+
+  it("deve lancar NotFoundError ao excluir evento inexistente", async () => {
+    vi.mocked(eventsRepository.findById).mockResolvedValue(null);
+
+    await expect(eventsService.delete({ id: eventOutput.id })).rejects.toBeInstanceOf(
+      NotFoundError
+    );
+
+    expect(eventsRepository.delete).not.toHaveBeenCalled();
+    expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
   });
 
   it("deve listar eventos com cache por parametros de consulta", async () => {

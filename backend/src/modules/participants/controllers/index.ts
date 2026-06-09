@@ -2,7 +2,7 @@ import type { NextFunction, Request } from "express";
 
 import type { ValidatedResponse } from "@/shared/middlewares";
 import { Logger } from "@/shared/utils";
-import type { CreateParticipantBody, ListParticipantsQuery } from "../schemas";
+import type { CreateParticipantBody, ListParticipantsQuery, ParticipantParams } from "../schemas";
 import { participantsService } from "../services";
 
 export class ParticipantsController {
@@ -37,6 +37,25 @@ export class ParticipantsController {
       response.success(participants, "Participantes listados com sucesso");
     } catch (error) {
       Logger.error("[ParticipantsController] Erro ao listar participantes", {
+        requestId: request.requestId,
+        error,
+      });
+      next(error);
+    }
+  }
+
+  public async delete(
+    request: Request,
+    response: ValidatedResponse<unknown, unknown, ParticipantParams>,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { params } = response.locals.validatedRequest;
+      const participant = await participantsService.delete({ id: params.participantId });
+
+      response.success(participant, "Participante excluido com sucesso");
+    } catch (error) {
+      Logger.error("[ParticipantsController] Erro ao excluir participante", {
         requestId: request.requestId,
         error,
       });

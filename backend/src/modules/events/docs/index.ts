@@ -226,6 +226,69 @@
  *               error:
  *                 code: 500
  *               timestamp: "2026-06-08T20:28:08.222Z"
+ *   delete:
+ *     summary: Exclui evento por id
+ *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Evento excluido com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Success'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Event'
+ *       400:
+ *         description: Id do evento invalido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *             example:
+ *               success: false
+ *               message: Dados da requisicao invalidos
+ *               error:
+ *                 code: 400
+ *                 details:
+ *                   formErrors: []
+ *                   fieldErrors:
+ *                     eventId:
+ *                       - Id do evento invalido
+ *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       404:
+ *         description: Evento nao encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               success: false
+ *               message: Evento nao encontrado
+ *               error:
+ *                 code: 404
+ *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               success: false
+ *               message: Erro interno do servidor
+ *               error:
+ *                 code: 500
+ *               timestamp: "2026-06-08T20:28:08.222Z"
  */
 
 /**

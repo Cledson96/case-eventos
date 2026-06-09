@@ -3,12 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { participantsService } from "@/modules/participants/services";
 import { app } from "@/server";
-import { ConflictError } from "@/shared/errors";
+import { ConflictError, NotFoundError } from "@/shared/errors";
 import { authHeader } from "./helpers/auth";
 
 vi.mock("@/modules/participants/services", () => ({
   participantsService: {
     create: vi.fn(),
+    delete: vi.fn(),
     list: vi.fn(),
   },
 }));
@@ -80,6 +81,35 @@ describe("Participants HTTP", () => {
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe("E-mail ja cadastrado");
     expect(response.body.error.code).toBe(409);
+  });
+
+  it("deve excluir participante com status 200", async () => {
+    vi.mocked(participantsService.delete).mockResolvedValue(participantOutput);
+
+    const response = await request(app)
+      .delete(`/participants/${participantOutput.id}`)
+      .set(authHeader)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe("Participante excluido com sucesso");
+    expect(response.body.data.id).toBe(participantOutput.id);
+    expect(participantsService.delete).toHaveBeenCalledWith({ id: participantOutput.id });
+  });
+
+  it("deve retornar 404 ao excluir participante inexistente", async () => {
+    vi.mocked(participantsService.delete).mockRejectedValue(
+      new NotFoundError("Participante nao encontrado")
+    );
+
+    const response = await request(app)
+      .delete(`/participants/${participantOutput.id}`)
+      .set(authHeader)
+      .expect(404);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("Participante nao encontrado");
+    expect(response.body.error.code).toBe(404);
   });
 
   it("deve listar participantes paginados", async () => {

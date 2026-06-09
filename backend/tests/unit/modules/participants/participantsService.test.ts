@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cache } from "@/infrastructure";
 import { participantsRepository } from "@/modules/participants/repositories";
 import { participantsService } from "@/modules/participants/services";
-import { ConflictError } from "@/shared/errors";
+import { ConflictError, NotFoundError } from "@/shared/errors";
 
 vi.mock("@/infrastructure", () => ({
   cache: {
@@ -16,7 +16,9 @@ vi.mock("@/infrastructure", () => ({
 vi.mock("@/modules/participants/repositories", () => ({
   participantsRepository: {
     create: vi.fn(),
+    delete: vi.fn(),
     findByEmail: vi.fn(),
+    findById: vi.fn(),
     list: vi.fn(),
   },
 }));
@@ -75,6 +77,30 @@ describe("ParticipantsService", () => {
     ).rejects.toBeInstanceOf(ConflictError);
 
     expect(participantsRepository.create).not.toHaveBeenCalled();
+    expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
+  });
+
+  it("deve excluir participante existente e invalidar caches relacionados", async () => {
+    vi.mocked(participantsRepository.findById).mockResolvedValue(participantOutput);
+    vi.mocked(participantsRepository.delete).mockResolvedValue(participantOutput);
+
+    const result = await participantsService.delete({ id: participantOutput.id });
+
+    expect(result).toEqual(participantOutput);
+    expect(participantsRepository.findById).toHaveBeenCalledWith(participantOutput.id);
+    expect(participantsRepository.delete).toHaveBeenCalledWith(participantOutput.id);
+    expect(cache.invalidateByPrefix).toHaveBeenCalledWith("participants:");
+    expect(cache.invalidateByPrefix).toHaveBeenCalledWith("events:");
+  });
+
+  it("deve lancar NotFoundError ao excluir participante inexistente", async () => {
+    vi.mocked(participantsRepository.findById).mockResolvedValue(null);
+
+    await expect(participantsService.delete({ id: participantOutput.id })).rejects.toBeInstanceOf(
+      NotFoundError
+    );
+
+    expect(participantsRepository.delete).not.toHaveBeenCalled();
     expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
   });
 

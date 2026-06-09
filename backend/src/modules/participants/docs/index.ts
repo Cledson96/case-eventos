@@ -172,4 +172,72 @@
  *               timestamp: "2026-06-08T20:28:08.222Z"
  */
 
+/**
+ * @swagger
+ * /participants/{participantId}:
+ *   delete:
+ *     summary: Exclui participante por id
+ *     tags: [Participants]
+ *     parameters:
+ *       - in: path
+ *         name: participantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Participante excluido com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Success'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Participant'
+ *       400:
+ *         description: Id do participante invalido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *             example:
+ *               success: false
+ *               message: Dados da requisicao invalidos
+ *               error:
+ *                 code: 400
+ *                 details:
+ *                   formErrors: []
+ *                   fieldErrors:
+ *                     participantId:
+ *                       - Id do participante invalido
+ *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       404:
+ *         description: Participante nao encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               success: false
+ *               message: Participante nao encontrado
+ *               error:
+ *                 code: 404
+ *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               success: false
+ *               message: Erro interno do servidor
+ *               error:
+ *                 code: 500
+ *               timestamp: "2026-06-08T20:28:08.222Z"
+ */
+
 export {};

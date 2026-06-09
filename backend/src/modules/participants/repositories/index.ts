@@ -3,6 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { buildPaginationMeta } from "@/shared/utils";
 import type {
   CreateParticipantInput,
+  DeleteParticipantInput,
   ListParticipantsInput,
   ListParticipantsOutput,
   ParticipantOutput,
@@ -58,6 +59,15 @@ class ParticipantsRepository {
     if (!participant) {
       return null;
     }
+
+    return this.mapParticipant(participant);
+  }
+
+  public async delete(id: DeleteParticipantInput["id"]): Promise<ParticipantOutput> {
+    const participant = await database.client.participant.delete({
+      where: { id },
+      select: this.participantSelect,
+    });
 
     return this.mapParticipant(participant);
   }

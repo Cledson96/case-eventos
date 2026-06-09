@@ -23,3 +23,7 @@ export type ListParticipantsInput = PaginationQuery & {
 };
 
 export type ListParticipantsOutput = PaginatedResult<ParticipantOutput>;
+
+export type DeleteParticipantInput = {
+  id: string;
+};

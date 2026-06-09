@@ -9,6 +9,7 @@ import { authHeader } from "./helpers/auth";
 vi.mock("@/modules/events/services", () => ({
   eventsService: {
     create: vi.fn(),
+    delete: vi.fn(),
     findById: vi.fn(),
     list: vi.fn(),
   },
@@ -112,6 +113,33 @@ describe("Events HTTP", () => {
 
     const response = await request(app)
       .get(`/events/${eventOutput.id}`)
+      .set(authHeader)
+      .expect(404);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("Evento nao encontrado");
+    expect(response.body.error.code).toBe(404);
+  });
+
+  it("deve excluir evento com status 200", async () => {
+    vi.mocked(eventsService.delete).mockResolvedValue(eventOutput);
+
+    const response = await request(app)
+      .delete(`/events/${eventOutput.id}`)
+      .set(authHeader)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe("Evento excluido com sucesso");
+    expect(response.body.data.id).toBe(eventOutput.id);
+    expect(eventsService.delete).toHaveBeenCalledWith({ id: eventOutput.id });
+  });
+
+  it("deve retornar 404 ao excluir evento inexistente", async () => {
+    vi.mocked(eventsService.delete).mockRejectedValue(new NotFoundError("Evento nao encontrado"));
+
+    const response = await request(app)
+      .delete(`/events/${eventOutput.id}`)
       .set(authHeader)
       .expect(404);
 

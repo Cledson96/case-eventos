@@ -2,7 +2,11 @@ import { Router } from "express";
 
 import { validateRequest } from "@/shared/middlewares";
 import { ParticipantsController } from "../controllers";
-import { createParticipantBodySchema, listParticipantsQuerySchema } from "../schemas";
+import {
+  createParticipantBodySchema,
+  listParticipantsQuerySchema,
+  participantParamsSchema,
+} from "../schemas";
 
 class ParticipantsRoutes {
   public readonly router: Router;
@@ -24,6 +28,11 @@ class ParticipantsRoutes {
       "/",
       validateRequest({ query: listParticipantsQuerySchema }),
       this.participantsController.list.bind(this.participantsController)
+    );
+    this.router.delete(
+      "/:participantId",
+      validateRequest({ params: participantParamsSchema }),
+      this.participantsController.delete.bind(this.participantsController)
     );
   }
 }

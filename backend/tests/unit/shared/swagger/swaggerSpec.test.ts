@@ -69,6 +69,9 @@ describe("SwaggerSpec", () => {
     expect(spec.paths).toHaveProperty("/events/{eventId}");
     expect(spec.paths).toHaveProperty("/events/{eventId}/participants");
     expect(spec.paths).toHaveProperty("/participants");
+    expect(spec.paths).toHaveProperty("/participants/{participantId}");
+    expect(spec.paths["/events/{eventId}"]).toHaveProperty("delete");
+    expect(spec.paths["/participants/{participantId}"]).toHaveProperty("delete");
   });
 
   it("deve documentar exemplos de erro com mensagem e status corretos", () => {

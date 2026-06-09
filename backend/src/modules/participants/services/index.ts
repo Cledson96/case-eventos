@@ -1,8 +1,9 @@
 import { cache } from "@/infrastructure";
-import { ConflictError } from "@/shared/errors";
+import { ConflictError, NotFoundError } from "@/shared/errors";
 import { participantsRepository } from "../repositories";
 import type {
   CreateParticipantInput,
+  DeleteParticipantInput,
   ListParticipantsInput,
   ListParticipantsOutput,
   ParticipantOutput,
@@ -24,6 +25,20 @@ class ParticipantsService {
     await cache.invalidateByPrefix("participants:");
 
     return createdParticipant;
+  }
+
+  public async delete(input: DeleteParticipantInput): Promise<ParticipantOutput> {
+    const participant = await participantsRepository.findById(input.id);
+
+    if (!participant) {
+      throw new NotFoundError("Participante nao encontrado");
+    }
+
+    const deletedParticipant = await participantsRepository.delete(input.id);
+    await cache.invalidateByPrefix("participants:");
+    await cache.invalidateByPrefix("events:");
+
+    return deletedParticipant;
   }
 
   public async list(input: ListParticipantsInput): Promise<ListParticipantsOutput> {

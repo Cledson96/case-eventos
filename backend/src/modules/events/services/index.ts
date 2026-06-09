@@ -4,6 +4,7 @@ import { participantsRepository } from "@/modules/participants/repositories";
 import { eventParticipantsRepository, eventsRepository } from "../repositories";
 import type {
   CreateEventInput,
+  DeleteEventInput,
   EventParticipantSubscriptionOutput,
   EventOutput,
   FindEventByIdInput,
@@ -39,6 +40,19 @@ class EventsService {
     await cache.set(cacheKey, event);
 
     return event;
+  }
+
+  public async delete(input: DeleteEventInput): Promise<EventOutput> {
+    const event = await eventsRepository.findById(input.id);
+
+    if (!event) {
+      throw new NotFoundError("Evento nao encontrado");
+    }
+
+    const deletedEvent = await eventsRepository.delete(input.id);
+    await cache.invalidateByPrefix("events:");
+
+    return deletedEvent;
   }
 
   public async list(input: ListEventsInput): Promise<ListEventsOutput> {

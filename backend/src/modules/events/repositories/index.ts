@@ -3,6 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { buildPaginationMeta } from "@/shared/utils";
 import type {
   CreateEventInput,
+  DeleteEventInput,
   EventOutput,
   EventParticipantOutput,
   EventParticipantSubscriptionOutput,
@@ -68,6 +69,15 @@ class EventsRepository {
     if (!event) {
       return null;
     }
+
+    return this.mapEvent(event);
+  }
+
+  public async delete(id: DeleteEventInput["id"]): Promise<EventOutput> {
+    const event = await database.client.event.delete({
+      where: { id },
+      select: this.eventSelect,
+    });
 
     return this.mapEvent(event);
   }

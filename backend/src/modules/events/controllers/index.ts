@@ -69,6 +69,25 @@ export class EventsController {
     }
   }
 
+  public async delete(
+    request: Request,
+    response: ValidatedResponse<unknown, unknown, EventParams>,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { params } = response.locals.validatedRequest;
+      const event = await eventsService.delete({ id: params.eventId });
+
+      response.success(event, "Evento excluido com sucesso");
+    } catch (error) {
+      Logger.error("[EventsController] Erro ao excluir evento", {
+        requestId: request.requestId,
+        error,
+      });
+      next(error);
+    }
+  }
+
   public async subscribeParticipant(
     request: Request,
     response: ValidatedResponse<SubscribeParticipantBody, unknown, EventParams>,

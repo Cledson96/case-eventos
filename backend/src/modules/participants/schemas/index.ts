@@ -26,5 +26,12 @@ export const listParticipantsQuerySchema = paginationQuerySchema.extend({
   sort: z.enum(["createdAt", "name", "email"], { error: "Ordenacao invalida" }).default("name"),
 });
 
+export const participantParamsSchema = z.object({
+  participantId: z
+    .string({ error: "Id do participante invalido" })
+    .uuid("Id do participante invalido"),
+});
+
 export type CreateParticipantBody = z.infer<typeof createParticipantBodySchema>;
 export type ListParticipantsQuery = z.infer<typeof listParticipantsQuerySchema>;
+export type ParticipantParams = z.infer<typeof participantParamsSchema>;

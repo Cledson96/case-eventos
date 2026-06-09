@@ -46,6 +46,11 @@ class EventsRoutes {
       validateRequest({ params: eventParamsSchema }),
       this.eventsController.findById.bind(this.eventsController)
     );
+    this.router.delete(
+      "/:eventId",
+      validateRequest({ params: eventParamsSchema }),
+      this.eventsController.delete.bind(this.eventsController)
+    );
   }
 }
 

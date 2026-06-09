@@ -149,6 +149,7 @@ Eventos:
 - `POST /events`
 - `GET /events`
 - `GET /events/:eventId`
+- `DELETE /events/:eventId`
 - `POST /events/:eventId/participants`
 - `GET /events/:eventId/participants`
 
@@ -156,6 +157,7 @@ Participantes:
 
 - `POST /participants`
 - `GET /participants`
+- `DELETE /participants/:participantId`
 
 Health checks:
 

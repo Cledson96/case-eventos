@@ -28,6 +28,10 @@ export type FindEventByIdInput = {
   id: string;
 };
 
+export type DeleteEventInput = {
+  id: string;
+};
+
 export type SubscribeParticipantInput = {
   eventId: string;
   participantId: string;
