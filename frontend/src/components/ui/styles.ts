@@ -2,7 +2,7 @@ export const fieldLabel = "block text-sm font-medium";
 
 export function fieldControlClass(hasError = false): string {
   const base =
-    "mt-1 w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition-colors";
+    "mt-1 w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-zinc-500 dark:placeholder:text-zinc-400";
   const state = hasError
     ? "border-red-500 focus:border-red-500"
     : "border-black/15 focus:border-brand dark:border-white/20";

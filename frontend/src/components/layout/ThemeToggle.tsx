@@ -37,7 +37,7 @@ export function ThemeToggle() {
       type="button"
       aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
       onClick={toggle}
-      className="inline-flex size-9 items-center justify-center rounded-md text-zinc-600 transition-colors hover:bg-black/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-foreground"
+      className="inline-flex size-10 items-center justify-center rounded-md text-zinc-600 transition-colors hover:bg-black/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-foreground"
     >
       {isDark ? (
         <svg
