@@ -14,6 +14,12 @@ const axiosErrorWithoutMessage = {
   response: { status: 500, data: {} },
 };
 
+const axiosErrorWithEmptyMessage = {
+  isAxiosError: true,
+  message: "Request failed with status code 400",
+  response: { status: 400, data: { message: "   " } },
+};
+
 describe("extractErrorMessage", () => {
   it("usa a mensagem da resposta da API quando existe", () => {
     expect(extractErrorMessage(axiosErrorWithMessage)).toBe("E-mail ja cadastrado");
@@ -21,6 +27,18 @@ describe("extractErrorMessage", () => {
 
   it("usa a mensagem do axios quando a resposta nao traz mensagem", () => {
     expect(extractErrorMessage(axiosErrorWithoutMessage)).toBe("timeout");
+  });
+
+  it("ignora mensagem vazia da API e cai na mensagem do axios", () => {
+    expect(extractErrorMessage(axiosErrorWithEmptyMessage)).toBe(
+      "Request failed with status code 400"
+    );
+  });
+
+  it("usa o fallback quando nada traz mensagem util", () => {
+    expect(extractErrorMessage({ isAxiosError: true, message: "", response: undefined })).toBe(
+      "Erro inesperado"
+    );
   });
 
   it("usa a mensagem de um Error comum", () => {
