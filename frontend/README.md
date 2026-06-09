@@ -4,13 +4,15 @@ Interface web para gerenciamento de eventos e participantes, consumindo a API do
 
 ## Stack
 
-- Next.js 16 (App Router)
+- Next.js 16 (App Router, Turbopack)
 - React 19
-- TypeScript
+- TypeScript (strict)
 - Tailwind CSS v4
 - Axios
 - dayjs
 - Vitest e Testing Library
+
+Sem bibliotecas de UI (Material UI, Bootstrap). O design system e proprio, em Tailwind.
 
 ## Requisitos
 
@@ -57,9 +59,9 @@ npm run dev
 
 A aplicacao ficara disponivel em `http://localhost:3000`.
 
-- `/` pagina inicial
+- `/` pagina inicial (orientacao + proximos eventos)
 - `/events` listagem de eventos
-- `/events/new` cadastro de evento
+- `/events/new` cadastro de evento (com previa ao vivo)
 - `/events/:eventId` detalhes do evento e inscricao de participantes
 
 ## Arquitetura
@@ -68,8 +70,33 @@ A aplicacao ficara disponivel em `http://localhost:3000`.
   cliente Axios server-side (`src/lib/http.ts`). O token Bearer fica somente no servidor.
 - **Route Handlers** (`src/app/api`) atuam como BFF: recebem as submissoes dos formularios
   e repassam ao backend injetando o token.
-- **Client Components** cuidam da interatividade (formularios) e do feedback via Context API
-  de toasts (`src/components/providers/ToastProvider.tsx`).
+- **Client Components** cuidam da interatividade (formularios, tema) e do feedback via
+  Context API de toasts (`src/components/providers/ToastProvider.tsx`).
+- **Regras de dominio** ficam no service (ex.: `eventsService.listUpcoming`); a pagina apenas
+  orquestra e decide fallback de UI. Estados de carregamento (`loading.tsx`), erro
+  (`error.tsx`) e nao encontrado (`not-found.tsx`) sao tratados pela rota.
+
+## Design system
+
+- **Cor de marca**: ambar/mel como acento decisivo (marca, acoes primarias, links, estado
+  ativo) sobre base tinta/papel. A cor vive na marca e na tipografia, nunca no fundo.
+- **Identidade sem fotos**: marca grafica propria (`BrandMark`) e o ladrilho de data
+  (`DateTile`) carregam a identidade visual.
+- **Tema claro/escuro**: alternavel pelo botao no header, padrao claro, persistido em
+  `localStorage` e aplicado por classe antes do paint (sem flash). Sem dependencias.
+- **Tokens** em `src/app/globals.css`: `--brand*` (marca) e `--border`, expostos como
+  utilitarios Tailwind (`bg-brand`, `text-brand-strong`, `border-border`, ...).
+- **Tipografia** centralizada no componente `Typography` (variantes de heading, corpo,
+  label, caption, erro). Acessibilidade alvo WCAG AA (contraste, foco visivel, labels,
+  `prefers-reduced-motion`).
+
+## Componentes e hooks
+
+- `components/layout`: `Header`, `BrandMark`, `BackLink`, `PageContainer`.
+- `components/ui`: `Typography`, `TextField`, `DateTile`, `EmptyState`, `Toast`, `styles`.
+- `components/providers`: `ToastProvider` (Context API).
+- `hooks/useForm`: estado, validacao e submit compartilhados pelos formularios (com
+  mascara via `transforms`).
 
 ## Estrutura
 
@@ -82,11 +109,13 @@ src/
     api/
     layout.tsx
     not-found.tsx
+    page.tsx
   components/
     layout/
     providers/
     ui/
   config/
+  hooks/
   lib/
   services/
   types/
