@@ -27,6 +27,26 @@ const options: swaggerJsdoc.Options = {
           description: "Token enviado no header Authorization como Bearer <token>.",
         },
       },
+      responses: {
+        UnauthorizedError: {
+          description: "Token de acesso ausente ou invalido",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/Error",
+              },
+              example: {
+                success: false,
+                message: "Token de acesso nao informado",
+                error: {
+                  code: 401,
+                },
+                timestamp: "2026-06-08T20:28:08.222Z",
+              },
+            },
+          },
+        },
+      },
       schemas: {
         Success: {
           type: "object",

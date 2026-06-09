@@ -65,6 +65,8 @@
  *                     phone:
  *                       - Telefone e obrigatorio
  *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       409:
  *         description: E-mail ja cadastrado
  *         content:
@@ -158,6 +160,8 @@
  *                     page:
  *                       - Pagina deve ser maior que zero
  *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -214,6 +218,8 @@
  *                     participantId:
  *                       - Id do participante invalido
  *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       404:
  *         description: Participante nao encontrado
  *         content:

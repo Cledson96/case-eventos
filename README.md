@@ -149,6 +149,32 @@ Authorization: Bearer case-eventos-dev-token
 
 Health checks e documentacao ficam acessiveis sem token.
 
+Os endpoints protegidos tambem estao marcados no Swagger em `/docs` e `/docs.json`.
+
+## Erros
+
+As respostas de erro seguem o mesmo formato em toda a API:
+
+```json
+{
+  "success": false,
+  "message": "Dados da requisicao invalidos",
+  "error": {
+    "code": 400,
+    "details": {}
+  },
+  "timestamp": "2026-06-08T20:28:08.222Z"
+}
+```
+
+Status principais:
+
+- `400`: dados, parametros ou ids invalidos.
+- `401`: token ausente ou invalido.
+- `404`: evento ou participante nao encontrado.
+- `409`: e-mail duplicado ou participante ja inscrito no evento.
+- `500`: erro interno do servidor.
+
 ## Endpoints
 
 Eventos:

@@ -65,6 +65,8 @@
  *                     date:
  *                       - Data e obrigatoria
  *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -146,6 +148,8 @@
  *                     sort:
  *                       - Ordenacao invalida
  *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -202,6 +206,8 @@
  *                     eventId:
  *                       - Id do evento invalido
  *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       404:
  *         description: Evento nao encontrado
  *         content:
@@ -265,6 +271,8 @@
  *                     eventId:
  *                       - Id do evento invalido
  *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       404:
  *         description: Evento nao encontrado
  *         content:
@@ -345,6 +353,8 @@
  *                     participantId:
  *                       - Id do participante e obrigatorio
  *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       404:
  *         description: Evento ou participante nao encontrado
  *         content:
@@ -456,6 +466,8 @@
  *                     eventId:
  *                       - Id do evento invalido
  *               timestamp: "2026-06-08T20:28:08.222Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       404:
  *         description: Evento nao encontrado
  *         content:
