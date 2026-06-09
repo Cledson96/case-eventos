@@ -11,6 +11,7 @@ const commandEnv = {
   NODE_ENV: "test",
   API_TOKEN: process.env.API_TOKEN ?? "case-eventos-test-token",
   DATABASE_URL: databaseTestUrl,
+  BASE_URL: process.env.BASE_URL ?? "http://localhost:3333",
   REDIS_URL: process.env.REDIS_URL ?? "",
   CACHE_TTL_SECONDS: process.env.CACHE_TTL_SECONDS ?? "60",
 };
