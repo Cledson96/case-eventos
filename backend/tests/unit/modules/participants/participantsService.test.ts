@@ -80,6 +80,26 @@ describe("ParticipantsService", () => {
     expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
   });
 
+  it("deve lancar ConflictError quando e-mail for duplicado durante a criacao", async () => {
+    vi.mocked(participantsRepository.findByEmail).mockResolvedValue(null);
+    vi.mocked(participantsRepository.create).mockRejectedValue(
+      new ConflictError("E-mail ja cadastrado")
+    );
+
+    await expect(
+      participantsService.create({
+        name: "Ana Souza",
+        email: "ana@email.com",
+        phone: "11999999999",
+      })
+    ).rejects.toMatchObject({
+      message: "E-mail ja cadastrado",
+      statusCode: 409,
+    });
+
+    expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
+  });
+
   it("deve excluir participante existente e invalidar caches relacionados", async () => {
     vi.mocked(participantsRepository.findById).mockResolvedValue(participantOutput);
     vi.mocked(participantsRepository.delete).mockResolvedValue(participantOutput);
@@ -101,6 +121,20 @@ describe("ParticipantsService", () => {
     );
 
     expect(participantsRepository.delete).not.toHaveBeenCalled();
+    expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
+  });
+
+  it("deve lancar NotFoundError quando participante deixar de existir durante a exclusao", async () => {
+    vi.mocked(participantsRepository.findById).mockResolvedValue(participantOutput);
+    vi.mocked(participantsRepository.delete).mockRejectedValue(
+      new NotFoundError("Participante nao encontrado")
+    );
+
+    await expect(participantsService.delete({ id: participantOutput.id })).rejects.toMatchObject({
+      message: "Participante nao encontrado",
+      statusCode: 404,
+    });
+
     expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
   });
 

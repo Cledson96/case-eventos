@@ -143,6 +143,48 @@ describe("EventParticipantsService", () => {
     expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
   });
 
+  it("deve lancar ConflictError quando inscricao duplicada ocorrer durante a criacao", async () => {
+    vi.mocked(eventsRepository.findById).mockResolvedValue(eventOutput);
+    vi.mocked(participantsRepository.findById).mockResolvedValue(participantOutput);
+    vi.mocked(eventParticipantsRepository.findByIds).mockResolvedValue(null);
+    vi.mocked(eventParticipantsRepository.create).mockRejectedValue(
+      new ConflictError("Participante ja inscrito neste evento")
+    );
+
+    await expect(
+      eventParticipantsService.subscribe({
+        eventId: eventOutput.id,
+        participantId: participantOutput.id,
+      })
+    ).rejects.toMatchObject({
+      message: "Participante ja inscrito neste evento",
+      statusCode: 409,
+    });
+
+    expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
+  });
+
+  it("deve lancar NotFoundError quando vinculo relacionado deixar de existir durante a inscricao", async () => {
+    vi.mocked(eventsRepository.findById).mockResolvedValue(eventOutput);
+    vi.mocked(participantsRepository.findById).mockResolvedValue(participantOutput);
+    vi.mocked(eventParticipantsRepository.findByIds).mockResolvedValue(null);
+    vi.mocked(eventParticipantsRepository.create).mockRejectedValue(
+      new NotFoundError("Evento ou participante nao encontrado")
+    );
+
+    await expect(
+      eventParticipantsService.subscribe({
+        eventId: eventOutput.id,
+        participantId: participantOutput.id,
+      })
+    ).rejects.toMatchObject({
+      message: "Evento ou participante nao encontrado",
+      statusCode: 404,
+    });
+
+    expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
+  });
+
   it("deve retornar participantes do evento a partir do cache", async () => {
     const paginatedParticipants = {
       data: [listedParticipantOutput],

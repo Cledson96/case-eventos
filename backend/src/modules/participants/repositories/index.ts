@@ -1,4 +1,5 @@
 import { database } from "@/infrastructure";
+import { executePrismaOperation } from "@/infrastructure/database";
 import type { Prisma } from "@/generated/prisma/client";
 import { buildPaginationMeta } from "@/shared/utils";
 import type {
@@ -29,10 +30,14 @@ class ParticipantsRepository {
   } satisfies Prisma.ParticipantSelect;
 
   public async create(input: CreateParticipantInput): Promise<ParticipantOutput> {
-    const participant = await database.client.participant.create({
-      data: input,
-      select: this.participantSelect,
-    });
+    const participant = await executePrismaOperation(
+      () =>
+        database.client.participant.create({
+          data: input,
+          select: this.participantSelect,
+        }),
+      { unique: "E-mail ja cadastrado" }
+    );
 
     return this.mapParticipant(participant);
   }
@@ -64,10 +69,14 @@ class ParticipantsRepository {
   }
 
   public async delete(id: DeleteParticipantInput["id"]): Promise<ParticipantOutput> {
-    const participant = await database.client.participant.delete({
-      where: { id },
-      select: this.participantSelect,
-    });
+    const participant = await executePrismaOperation(
+      () =>
+        database.client.participant.delete({
+          where: { id },
+          select: this.participantSelect,
+        }),
+      { notFound: "Participante nao encontrado" }
+    );
 
     return this.mapParticipant(participant);
   }

@@ -115,6 +115,20 @@ describe("EventsService", () => {
     expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
   });
 
+  it("deve lancar NotFoundError quando evento deixar de existir durante a exclusao", async () => {
+    vi.mocked(eventsRepository.findById).mockResolvedValue(eventOutput);
+    vi.mocked(eventsRepository.delete).mockRejectedValue(
+      new NotFoundError("Evento nao encontrado")
+    );
+
+    await expect(eventsService.delete({ id: eventOutput.id })).rejects.toMatchObject({
+      message: "Evento nao encontrado",
+      statusCode: 404,
+    });
+
+    expect(cache.invalidateByPrefix).not.toHaveBeenCalled();
+  });
+
   it("deve listar eventos com cache por parametros de consulta", async () => {
     const paginatedEvents = {
       data: [eventOutput],

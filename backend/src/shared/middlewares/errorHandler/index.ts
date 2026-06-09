@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { z, ZodError } from "zod";
 
+import { mapPrismaKnownRequestError } from "@/infrastructure/database";
 import { Env } from "@/shared/config";
 import { HttpError } from "@/shared/errors";
 import { Logger } from "@/shared/utils";
@@ -19,6 +20,14 @@ export function errorHandler(
   if (error instanceof HttpError) {
     const details = Env.nodeEnv === "production" ? undefined : error.details;
     response.error(error.message, error.statusCode, details);
+    return;
+  }
+
+  const prismaError = mapPrismaKnownRequestError(error);
+
+  if (prismaError) {
+    const details = Env.nodeEnv === "production" ? undefined : prismaError.details;
+    response.error(prismaError.message, prismaError.statusCode, details);
     return;
   }
 

@@ -1,4 +1,5 @@
 import { database } from "@/infrastructure";
+import { executePrismaOperation } from "@/infrastructure/database";
 import type { Prisma } from "@/generated/prisma/client";
 import { buildPaginationMeta } from "@/shared/utils";
 import type {
@@ -74,10 +75,14 @@ class EventsRepository {
   }
 
   public async delete(id: DeleteEventInput["id"]): Promise<EventOutput> {
-    const event = await database.client.event.delete({
-      where: { id },
-      select: this.eventSelect,
-    });
+    const event = await executePrismaOperation(
+      () =>
+        database.client.event.delete({
+          where: { id },
+          select: this.eventSelect,
+        }),
+      { notFound: "Evento nao encontrado" }
+    );
 
     return this.mapEvent(event);
   }
@@ -178,10 +183,17 @@ class EventParticipantsRepository {
   public async create(
     input: SubscribeParticipantInput
   ): Promise<EventParticipantSubscriptionOutput> {
-    const eventParticipant = await database.client.eventParticipant.create({
-      data: input,
-      select: this.eventParticipantSelect,
-    });
+    const eventParticipant = await executePrismaOperation(
+      () =>
+        database.client.eventParticipant.create({
+          data: input,
+          select: this.eventParticipantSelect,
+        }),
+      {
+        unique: "Participante ja inscrito neste evento",
+        foreignKey: "Evento ou participante nao encontrado",
+      }
+    );
 
     return this.mapEventParticipant(eventParticipant);
   }
