@@ -123,6 +123,118 @@ A API ficara disponivel em:
 - `http://localhost:3333/docs`
 - `http://localhost:3333/docs.json`
 
+## Docker
+
+Para subir a aplicacao completa com PostgreSQL, Redis, backend e frontend:
+
+```bash
+docker compose up --build
+```
+
+URLs principais:
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:3333`
+- Swagger: `http://localhost:3333/docs`
+
+Para subir somente o backend com banco e Redis:
+
+```bash
+docker compose up --build backend
+```
+
+Para subir somente o frontend usando um backend externo ou local:
+
+```bash
+FRONTEND_API_URL=http://host.docker.internal:3333 docker compose up --build frontend
+```
+
+No PowerShell:
+
+```powershell
+$env:FRONTEND_API_URL="http://host.docker.internal:3333"
+docker compose up --build frontend
+```
+
+Variaveis aceitas pelo compose:
+
+```env
+API_TOKEN=case-eventos-dev-token
+CACHE_TTL_SECONDS=60
+FRONTEND_API_URL=http://backend:3333
+FRONTEND_BUILD_API_URL=http://backend:3333
+```
+
+## Deploy VPS com GitHub Actions
+
+O projeto possui workflows para CI e deploy Docker em VPS:
+
+- `.github/workflows/ci.yml`: valida backend e frontend em pushes e pull requests para `development` e `main`.
+- `.github/workflows/deploy.yml`: builda imagens no GHCR e faz deploy na VPS.
+
+Fluxo de ambientes:
+
+- Push na branch `development`: deploy no Environment `development`.
+- Push na branch `main`: deploy no Environment `production`.
+- `workflow_dispatch`: permite disparar manualmente o deploy do ambiente correspondente a branch.
+
+As imagens publicadas seguem o formato:
+
+```txt
+ghcr.io/cledson96/case-eventos-backend:<sha>
+ghcr.io/cledson96/case-eventos-frontend:<sha>
+```
+
+Na VPS, o deploy usa:
+
+- `deploy/docker-compose.vps.yml`
+- `scripts/deploy-docker.sh`
+- `deploy/nginx/reverse-proxy-http.conf`
+- `deploy/nginx/reverse-proxy-https.conf`
+
+A VPS nao builda a aplicacao. Ela apenas faz pull das imagens do GHCR, sobe os containers com Docker Compose, publica nginx em loopback e emite certificado TLS com certbot quando necessario.
+
+Configure os Environments `development` e `production` no GitHub com os mesmos nomes de secrets e vars, mudando apenas os valores.
+
+Secrets obrigatorios:
+
+```txt
+VPS_HOST
+VPS_USER
+VPS_SSH_KEY
+API_TOKEN
+POSTGRES_PASSWORD
+```
+
+Secrets opcionais:
+
+```txt
+VPS_PORT
+CERTBOT_EMAIL
+DATABASE_URL
+GHCR_PULL_TOKEN
+```
+
+Vars obrigatorias:
+
+```txt
+FRONTEND_DOMAIN
+BACKEND_DOMAIN
+```
+
+Vars recomendadas por ambiente:
+
+```txt
+DEPLOY_PATH=/opt/case-eventos-development
+COMPOSE_PROJECT_NAME=case-eventos-development
+FRONTEND_PORT=3001
+BACKEND_PORT=3334
+FRONTEND_PUBLIC_URL=https://eventos-dev.seudominio.com
+ALLOWED_ORIGINS=https://eventos-dev.seudominio.com
+```
+
+Para `production`, use outro `DEPLOY_PATH`, outro `COMPOSE_PROJECT_NAME` e dominios de producao. O usuario SSH precisa ter permissao de `sudo` para instalar e gerenciar Docker, nginx e certbot. Antes do primeiro deploy com TLS, os registros DNS dos dominios devem apontar para a VPS e a porta `80` deve estar liberada.
+
 ## Frontend
 
 Com o backend em execucao, rode a interface web:
