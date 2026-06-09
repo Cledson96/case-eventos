@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 import { createParticipantBodySchema } from "@/modules/participants/schemas";
 
@@ -12,7 +13,7 @@ describe("ParticipantsSchemas", () => {
       return;
     }
 
-    const fieldErrors = result.error.flatten().fieldErrors;
+    const fieldErrors = z.flattenError(result.error).fieldErrors;
 
     expect(fieldErrors.name).toContain("Nome e obrigatorio");
     expect(fieldErrors.email).toContain("E-mail e obrigatorio");

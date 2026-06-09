@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 
 import { Env } from "@/shared/config";
 import { HttpError } from "@/shared/errors";
@@ -12,7 +12,7 @@ export function errorHandler(
   _next: NextFunction
 ): void {
   if (error instanceof ZodError) {
-    response.badRequest("Dados da requisicao invalidos", error.flatten());
+    response.badRequest("Dados da requisicao invalidos", z.flattenError(error));
     return;
   }
 

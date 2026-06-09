@@ -21,13 +21,16 @@ export const createEventBodySchema = z.object({
 });
 
 export const eventParamsSchema = z.object({
-  eventId: z.string({ error: "Id do evento invalido" }).uuid("Id do evento invalido"),
+  eventId: z.uuid({ error: "Id do evento invalido" }),
 });
 
 export const subscribeParticipantBodySchema = z.object({
-  participantId: z
-    .string({ error: "Id do participante e obrigatorio" })
-    .uuid("Id do participante invalido"),
+  participantId: z.uuid({
+    error: (issue) =>
+      issue.input === undefined
+        ? "Id do participante e obrigatorio"
+        : "Id do participante invalido",
+  }),
 });
 
 export const listEventsQuerySchema = paginationQuerySchema.extend({

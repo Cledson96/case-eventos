@@ -27,9 +27,7 @@ export const listParticipantsQuerySchema = paginationQuerySchema.extend({
 });
 
 export const participantParamsSchema = z.object({
-  participantId: z
-    .string({ error: "Id do participante invalido" })
-    .uuid("Id do participante invalido"),
+  participantId: z.uuid({ error: "Id do participante invalido" }),
 });
 
 export type CreateParticipantBody = z.infer<typeof createParticipantBodySchema>;
