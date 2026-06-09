@@ -1,7 +1,14 @@
 export const fieldLabel = "block text-sm font-medium";
 
-export const fieldControl =
-  "mt-1 w-full rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-brand dark:border-white/20";
+export function fieldControlClass(hasError = false): string {
+  const base =
+    "mt-1 w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition-colors";
+  const state = hasError
+    ? "border-red-500 focus:border-red-500"
+    : "border-black/15 focus:border-brand dark:border-white/20";
+
+  return `${base} ${state}`;
+}
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background";

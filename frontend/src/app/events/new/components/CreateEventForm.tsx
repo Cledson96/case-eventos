@@ -7,24 +7,65 @@ import { useState } from "react";
 
 import { useToast } from "@/components/providers/ToastProvider";
 import { DateTile } from "@/components/ui/DateTile";
-import { buttonPrimary, buttonSecondary, fieldControl, fieldLabel } from "@/components/ui/styles";
+import { TextField } from "@/components/ui/TextField";
+import { buttonPrimary, buttonSecondary } from "@/components/ui/styles";
 import { AppDate } from "@/utils/date";
 import { extractErrorMessage } from "@/utils/error";
+import { validateDescription, validateName, validateRequiredDate } from "@/utils/validation";
+
+type Field = "name" | "description" | "date";
+type Values = Record<Field, string>;
+type Errors = Partial<Record<Field, string | null>>;
+
+const validators: Record<Field, (value: string) => string | null> = {
+  name: validateName,
+  description: validateDescription,
+  date: validateRequiredDate,
+};
+
+const emptyValues: Values = { name: "", description: "", date: "" };
 
 export function CreateEventForm() {
   const router = useRouter();
   const { showToast } = useToast();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
+  const [values, setValues] = useState<Values>(emptyValues);
+  const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
+
+  function handleChange(field: Field, value: string) {
+    setValues((current) => ({ ...current, [field]: value }));
+
+    if (errors[field] !== undefined) {
+      setErrors((current) => ({ ...current, [field]: validators[field](value) }));
+    }
+  }
+
+  function handleBlur(field: Field) {
+    setErrors((current) => ({ ...current, [field]: validators[field](values[field]) }));
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const nextErrors: Errors = {
+      name: validateName(values.name),
+      description: validateDescription(values.description),
+      date: validateRequiredDate(values.date),
+    };
+    setErrors(nextErrors);
+
+    if (Object.values(nextErrors).some(Boolean)) {
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      await axios.post("/api/events", { name, description, date });
+      await axios.post("/api/events", {
+        name: values.name.trim(),
+        description: values.description.trim(),
+        date: values.date,
+      });
       showToast("Evento criado com sucesso");
       router.push("/events");
       router.refresh();
@@ -37,52 +78,40 @@ export function CreateEventForm() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div>
-          <label htmlFor="name" className={fieldLabel}>
-            Nome
-          </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            required
-            maxLength={120}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            className={fieldControl}
-          />
-        </div>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        <TextField
+          id="name"
+          label="Nome"
+          value={values.name}
+          onChange={(value) => handleChange("name", value)}
+          onBlur={() => handleBlur("name")}
+          error={errors.name}
+          required
+          maxLength={120}
+        />
 
-        <div>
-          <label htmlFor="description" className={fieldLabel}>
-            Descricao
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            required
-            rows={5}
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            className={fieldControl}
-          />
-        </div>
+        <TextField
+          id="description"
+          label="Descricao"
+          multiline
+          rows={5}
+          value={values.description}
+          onChange={(value) => handleChange("description", value)}
+          onBlur={() => handleBlur("description")}
+          error={errors.description}
+          required
+        />
 
-        <div>
-          <label htmlFor="date" className={fieldLabel}>
-            Data
-          </label>
-          <input
-            id="date"
-            name="date"
-            type="datetime-local"
-            required
-            value={date}
-            onChange={(event) => setDate(event.target.value)}
-            className={fieldControl}
-          />
-        </div>
+        <TextField
+          id="date"
+          label="Data"
+          type="datetime-local"
+          value={values.date}
+          onChange={(value) => handleChange("date", value)}
+          onBlur={() => handleBlur("date")}
+          error={errors.date}
+          required
+        />
 
         <div className="mt-2 flex justify-end gap-3">
           <Link href="/events" className={buttonSecondary}>
@@ -98,8 +127,8 @@ export function CreateEventForm() {
         <div className="lg:sticky lg:top-20">
           <p className="mb-2 text-sm font-medium text-zinc-500">Previa</p>
           <div className="flex gap-4 rounded-xl border border-black/10 p-5 dark:border-white/15">
-            {date ? (
-              <DateTile date={date} />
+            {values.date ? (
+              <DateTile date={values.date} />
             ) : (
               <div className="flex size-14 shrink-0 items-center justify-center rounded-lg border border-dashed border-black/20 text-zinc-400 dark:border-white/20">
                 <svg
@@ -120,15 +149,15 @@ export function CreateEventForm() {
             )}
 
             <div className="min-w-0 flex-1">
-              <p className={`truncate font-medium ${name ? "" : "text-zinc-400"}`}>
-                {name || "Nome do evento"}
+              <p className={`truncate font-medium ${values.name ? "" : "text-zinc-400"}`}>
+                {values.name || "Nome do evento"}
               </p>
               <p className="mt-1 truncate text-sm text-zinc-600 dark:text-zinc-400">
-                {date ? AppDate.weekdayTime(date) : "Selecione a data"}
+                {values.date ? AppDate.weekdayTime(values.date) : "Selecione a data"}
               </p>
-              {description && (
+              {values.description && (
                 <p className="mt-1 line-clamp-2 text-sm text-zinc-700 dark:text-zinc-300">
-                  {description}
+                  {values.description}
                 </p>
               )}
             </div>

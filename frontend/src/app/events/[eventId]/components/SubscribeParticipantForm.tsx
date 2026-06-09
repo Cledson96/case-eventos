@@ -1,36 +1,71 @@
 "use client";
 
 import axios from "axios";
-import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { useToast } from "@/components/providers/ToastProvider";
-import { buttonPrimary, fieldControl, fieldLabel } from "@/components/ui/styles";
+import { TextField } from "@/components/ui/TextField";
+import { buttonPrimary } from "@/components/ui/styles";
+import { maskPhone } from "@/utils/mask";
 import { extractErrorMessage } from "@/utils/error";
+import { validateEmail, validateName, validatePhone } from "@/utils/validation";
+
+type Field = "name" | "email" | "phone";
+type Values = Record<Field, string>;
+type Errors = Partial<Record<Field, string | null>>;
+
+const validators: Record<Field, (value: string) => string | null> = {
+  name: validateName,
+  email: validateEmail,
+  phone: validatePhone,
+};
+
+const emptyValues: Values = { name: "", email: "", phone: "" };
 
 export function SubscribeParticipantForm({ eventId }: { eventId: string }) {
-  const router = useRouter();
   const { showToast } = useToast();
-  const formRef = useRef<HTMLFormElement>(null);
+  const [values, setValues] = useState<Values>(emptyValues);
+  const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
+
+  function handleChange(field: Field, raw: string) {
+    const value = field === "phone" ? maskPhone(raw) : raw;
+    setValues((current) => ({ ...current, [field]: value }));
+
+    if (errors[field] !== undefined) {
+      setErrors((current) => ({ ...current, [field]: validators[field](value) }));
+    }
+  }
+
+  function handleBlur(field: Field) {
+    setErrors((current) => ({ ...current, [field]: validators[field](values[field]) }));
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
 
-    const payload = {
-      name: String(formData.get("name") ?? ""),
-      email: String(formData.get("email") ?? ""),
-      phone: String(formData.get("phone") ?? ""),
+    const nextErrors: Errors = {
+      name: validateName(values.name),
+      email: validateEmail(values.email),
+      phone: validatePhone(values.phone),
     };
+    setErrors(nextErrors);
+
+    if (Object.values(nextErrors).some(Boolean)) {
+      return;
+    }
 
     setSubmitting(true);
 
     try {
-      await axios.post(`/api/events/${eventId}/participants`, payload);
+      await axios.post(`/api/events/${eventId}/participants`, {
+        name: values.name.trim(),
+        email: values.email.trim(),
+        phone: values.phone,
+      });
       showToast("Participante inscrito com sucesso");
-      formRef.current?.reset();
-      router.refresh();
+      setValues(emptyValues);
+      setErrors({});
     } catch (error) {
       showToast(extractErrorMessage(error), "error");
     } finally {
@@ -39,48 +74,47 @@ export function SubscribeParticipantForm({ eventId }: { eventId: string }) {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div>
-        <label htmlFor="name" className={fieldLabel}>
-          Nome
-        </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          required
-          maxLength={120}
-          className={fieldControl}
-        />
-      </div>
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+      <TextField
+        id="name"
+        label="Nome"
+        value={values.name}
+        onChange={(value) => handleChange("name", value)}
+        onBlur={() => handleBlur("name")}
+        error={errors.name}
+        required
+        maxLength={120}
+        autoComplete="name"
+      />
 
-      <div>
-        <label htmlFor="email" className={fieldLabel}>
-          E-mail
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          maxLength={180}
-          className={fieldControl}
-        />
-      </div>
+      <TextField
+        id="email"
+        label="E-mail"
+        type="email"
+        inputMode="email"
+        value={values.email}
+        onChange={(value) => handleChange("email", value)}
+        onBlur={() => handleBlur("email")}
+        error={errors.email}
+        required
+        maxLength={180}
+        autoComplete="email"
+        placeholder="nome@exemplo.com"
+      />
 
-      <div>
-        <label htmlFor="phone" className={fieldLabel}>
-          Telefone
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          required
-          maxLength={30}
-          className={fieldControl}
-        />
-      </div>
+      <TextField
+        id="phone"
+        label="Telefone"
+        type="tel"
+        inputMode="tel"
+        value={values.phone}
+        onChange={(value) => handleChange("phone", value)}
+        onBlur={() => handleBlur("phone")}
+        error={errors.phone}
+        required
+        autoComplete="tel"
+        placeholder="(11) 90000-0000"
+      />
 
       <div className="flex justify-end">
         <button type="submit" disabled={submitting} className={buttonPrimary}>
