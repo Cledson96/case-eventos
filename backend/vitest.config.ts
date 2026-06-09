@@ -13,6 +13,7 @@ export default defineConfig({
     env: {
       NODE_ENV: "test",
     },
+    exclude: ["tests/database/**", "node_modules/**", "dist/**", "coverage/**"],
     globals: false,
     include: ["tests/**/*.test.ts"],
     coverage: {

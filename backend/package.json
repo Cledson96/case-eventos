@@ -19,6 +19,7 @@
     "perf:event-participants": "tsx scripts/performance/event-participants.ts",
     "perf:event-participants:sweep": "tsx scripts/performance/event-participants-sweep.ts",
     "test": "vitest run",
+    "test:database": "tsx scripts/database/run-database-tests.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "db:generate": "prisma generate",

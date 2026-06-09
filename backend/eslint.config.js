@@ -17,6 +17,7 @@ export default tseslint.config(
       "prisma/**/*.ts",
       "prisma.config.ts",
       "vitest.config.ts",
+      "vitest.database.config.ts",
     ],
     languageOptions: {
       globals: {
