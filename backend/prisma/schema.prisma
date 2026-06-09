@@ -18,6 +18,7 @@ model Event {
 
   @@index([date])
   @@index([name])
+  @@index([createdAt])
 }
 
 model Participant {
@@ -30,6 +31,7 @@ model Participant {
   updatedAt DateTime           @updatedAt
 
   @@index([name])
+  @@index([createdAt])
 }
 
 model EventParticipant {
@@ -41,4 +43,5 @@ model EventParticipant {
 
   @@id([eventId, participantId])
   @@index([participantId])
+  @@index([eventId, createdAt])
 }
