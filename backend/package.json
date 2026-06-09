@@ -16,6 +16,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
+    "perf:event-participants": "tsx scripts/performance/event-participants.ts",
+    "perf:event-participants:sweep": "tsx scripts/performance/event-participants-sweep.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

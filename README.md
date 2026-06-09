@@ -206,6 +206,8 @@ npm start
 npm run typecheck
 npm run lint
 npm run format:check
+npm run perf:event-participants
+npm run perf:event-participants:sweep
 npm test
 npm run test:coverage
 npm run db:generate
@@ -213,6 +215,39 @@ npm run db:migrate
 npm run db:deploy
 npm run db:seed
 npm run db:studio
+```
+
+## Performance
+
+Para medir carga no endpoint de participantes do evento seedado, suba o banco, execute migrations e seed, inicie a API e rode:
+
+```bash
+npm run perf:event-participants
+```
+
+Por padrao, o teste usa `GET /events/:eventId/participants?page=1&limit=100` no evento com 1000 participantes. Variaveis opcionais:
+
+```env
+PERF_BASE_URL=http://localhost:3333
+PERF_CONNECTIONS=10
+PERF_DURATION_SECONDS=10
+PERF_LIMIT=100
+PERF_PIPELINING=1
+```
+
+Para medir a capacidade da rota sem bater no rate limit local, suba a API com `RATE_LIMIT_MAX` alto durante o teste.
+
+Para procurar o limite pratico da rota em cargas progressivas, rode:
+
+```bash
+npm run perf:event-participants:sweep
+```
+
+Por padrao, o sweep testa `2,5,10,25,50` conexoes. Para customizar:
+
+```env
+PERF_SWEEP_CONNECTIONS=5,10,25,50,100
+PERF_DURATION_SECONDS=30
 ```
 
 ## Validacao
