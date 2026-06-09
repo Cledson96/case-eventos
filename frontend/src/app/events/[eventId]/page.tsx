@@ -6,7 +6,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { DateTile } from "@/components/ui/DateTile";
 import { Typography } from "@/components/ui/Typography";
 import { eventsService } from "@/services/events";
-import type { Event } from "@/types";
+import type { Event, EventParticipant } from "@/types";
 import { AppDate } from "@/utils/date";
 import { extractErrorStatus } from "@/utils/error";
 import { ParticipantList } from "./components/ParticipantList";
@@ -22,13 +22,19 @@ type EventDetailPageProps = {
   params: Promise<{ eventId: string }>;
 };
 
-export default async function EventDetailPage({ params }: EventDetailPageProps) {
-  const { eventId } = await params;
+type EventDetail = {
+  event: Event;
+  participants: EventParticipant[];
+};
 
-  let event: Event;
-
+async function loadEventDetail(eventId: string): Promise<EventDetail> {
   try {
-    event = await eventsService.findById(eventId);
+    const [event, participants] = await Promise.all([
+      eventsService.findById(eventId),
+      eventsService.listParticipants(eventId, { sort: "createdAt", order: "asc", limit: 100 }),
+    ]);
+
+    return { event, participants: participants.data };
   } catch (error) {
     if (extractErrorStatus(error) === 404) {
       notFound();
@@ -36,12 +42,11 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
     throw error;
   }
+}
 
-  const { data: participants } = await eventsService.listParticipants(eventId, {
-    sort: "createdAt",
-    order: "asc",
-    limit: 100,
-  });
+export default async function EventDetailPage({ params }: EventDetailPageProps) {
+  const { eventId } = await params;
+  const { event, participants } = await loadEventDetail(eventId);
 
   return (
     <PageContainer className="py-8">
