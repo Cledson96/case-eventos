@@ -15,6 +15,13 @@ class EventsService {
     return httpClient.get<Paginated<Event>>("/events", { params: query });
   }
 
+  public async listUpcoming(limit = 3): Promise<Event[]> {
+    const { data } = await this.list({ sort: "date", order: "asc", limit: 50 });
+    const now = Date.now();
+
+    return data.filter((event) => new Date(event.date).getTime() > now).slice(0, limit);
+  }
+
   public async findById(eventId: string): Promise<Event> {
     return httpClient.get<Event>(`/events/${eventId}`);
   }

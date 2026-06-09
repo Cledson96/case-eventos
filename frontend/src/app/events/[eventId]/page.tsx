@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { BackLink } from "@/components/layout/BackLink";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { DateTile } from "@/components/ui/DateTile";
 import { eventsService } from "@/services/events";
 import type { Event } from "@/types";
@@ -42,7 +43,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   });
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-8">
+    <PageContainer className="py-8">
       <BackLink href="/events" label="Eventos" />
 
       <header className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
@@ -84,6 +85,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           </div>
         </aside>
       </div>
-    </main>
+    </PageContainer>
   );
 }
