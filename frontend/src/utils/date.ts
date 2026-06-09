@@ -19,4 +19,8 @@ export class AppDate {
   public static weekdayTime(value: string): string {
     return dayjs(value).format("ddd[,] HH:mm").replace(".", "");
   }
+
+  public static shortDate(value: string): string {
+    return dayjs(value).format("D [de] MMM [de] YYYY").replace(".", "");
+  }
 }
