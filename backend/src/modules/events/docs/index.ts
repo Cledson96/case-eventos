@@ -4,6 +4,7 @@
  *   - name: Events
  *     description: Gerenciamento de eventos
  */
+export const eventsTagDocs = true;
 
 /**
  * @swagger
@@ -163,6 +164,7 @@
  *                 code: 500
  *               timestamp: "2026-06-08T20:28:08.222Z"
  */
+export const eventsCollectionDocs = true;
 
 /**
  * @swagger
@@ -298,6 +300,7 @@
  *                 code: 500
  *               timestamp: "2026-06-08T20:28:08.222Z"
  */
+export const eventByIdDocs = true;
 
 /**
  * @swagger
@@ -493,5 +496,4 @@
  *                 code: 500
  *               timestamp: "2026-06-08T20:28:08.222Z"
  */
-
-export {};
+export const eventParticipantsDocs = true;

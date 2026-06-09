@@ -73,6 +73,7 @@ Variaveis principais:
 
 ```env
 PORT=3333
+BASE_URL=http://localhost:3333
 API_TOKEN=case-eventos-dev-token
 DATABASE_URL=postgresql://case_eventos:case_eventos@localhost:5432/case_eventos?schema=public
 DATABASE_TEST_URL=postgresql://case_eventos:case_eventos@localhost:5432/case_eventos_test?schema=public
@@ -230,12 +231,13 @@ DEPLOY_PATH=/opt/case-eventos-development
 COMPOSE_PROJECT_NAME=case-eventos-development
 FRONTEND_PORT=3001
 BACKEND_PORT=3334
+BASE_URL=https://api-eventos-dev.seudominio.com
 FRONTEND_PUBLIC_URL=https://eventos-dev.seudominio.com
 ALLOWED_ORIGINS=https://eventos-dev.seudominio.com
 RUN_SEED_ON_DEPLOY=true
 ```
 
-Para `production`, use outro `DEPLOY_PATH`, outro `COMPOSE_PROJECT_NAME` e dominios de producao. Se quiser popular o ambiente de producao/demo com os dados fake do seed, configure `RUN_SEED_ON_DEPLOY=true`; caso contrario, deixe `false`. O usuario SSH precisa ter permissao de `sudo` para instalar e gerenciar Docker, nginx e certbot. Antes do primeiro deploy com TLS, os registros DNS dos dominios devem apontar para a VPS e a porta `80` deve estar liberada.
+Para `production`, use outro `DEPLOY_PATH`, outro `COMPOSE_PROJECT_NAME` e dominios de producao. Se `BASE_URL` nao for configurado, o deploy usa `https://BACKEND_DOMAIN` como URL publica da API no Swagger. Se quiser popular o ambiente de producao/demo com os dados fake do seed, configure `RUN_SEED_ON_DEPLOY=true`; caso contrario, deixe `false`. O usuario SSH precisa ter permissao de `sudo` para instalar e gerenciar Docker, nginx e certbot. Antes do primeiro deploy com TLS, os registros DNS dos dominios devem apontar para a VPS e a porta `80` deve estar liberada.
 
 ## Frontend
 

@@ -253,6 +253,7 @@ jobs:
           COMPOSE_PROJECT_NAME: ${{ vars.COMPOSE_PROJECT_NAME }}
           FRONTEND_DOMAIN: ${{ vars.FRONTEND_DOMAIN }}
           BACKEND_DOMAIN: ${{ vars.BACKEND_DOMAIN }}
+          BASE_URL: ${{ vars.BASE_URL }}
           FRONTEND_PORT: ${{ vars.FRONTEND_PORT || '3000' }}
           BACKEND_PORT: ${{ vars.BACKEND_PORT || '3333' }}
           FRONTEND_PUBLIC_URL: ${{ vars.FRONTEND_PUBLIC_URL }}
@@ -282,6 +283,7 @@ jobs:
           deploy_path="${DEPLOY_PATH:-/opt/case-eventos-${DEPLOY_ENVIRONMENT}}"
           compose_project_name="${COMPOSE_PROJECT_NAME:-case-eventos-${DEPLOY_ENVIRONMENT}}"
           frontend_public_url="${FRONTEND_PUBLIC_URL:-https://${FRONTEND_DOMAIN}}"
+          backend_public_url="${BASE_URL:-https://${BACKEND_DOMAIN}}"
           allowed_origins="${ALLOWED_ORIGINS:-${frontend_public_url}}"
 
           if [ -n "${DATABASE_URL}" ]; then
@@ -316,6 +318,7 @@ jobs:
           NODE_ENV=production
           PORT=3333
           HOST=0.0.0.0
+          BASE_URL=${backend_public_url}
           ALLOWED_ORIGINS=${allowed_origins}
           RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS}
           RATE_LIMIT_MAX=${RATE_LIMIT_MAX}

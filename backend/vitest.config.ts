@@ -12,6 +12,7 @@ export default defineConfig({
     environment: "node",
     env: {
       NODE_ENV: "test",
+      BASE_URL: "http://localhost:3333",
     },
     exclude: ["tests/database/**", "node_modules/**", "dist/**", "coverage/**"],
     globals: false,

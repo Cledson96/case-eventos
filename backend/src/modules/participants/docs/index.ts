@@ -4,6 +4,7 @@
  *   - name: Participants
  *     description: Gerenciamento de participantes
  */
+export const participantsTagDocs = true;
 
 /**
  * @swagger
@@ -175,6 +176,7 @@
  *                 code: 500
  *               timestamp: "2026-06-08T20:28:08.222Z"
  */
+export const participantsCollectionDocs = true;
 
 /**
  * @swagger
@@ -245,5 +247,4 @@
  *                 code: 500
  *               timestamp: "2026-06-08T20:28:08.222Z"
  */
-
-export {};
+export const participantByIdDocs = true;

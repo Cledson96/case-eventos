@@ -18,10 +18,24 @@ const optionalStringSchema = z.preprocess(
   z.string().trim().min(1).optional()
 );
 
+const optionalUrlSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    const trimmedValue = value.trim();
+
+    return trimmedValue === "" ? undefined : trimmedValue;
+  },
+  z.url({ error: "BASE_URL deve ser uma URL valida" }).optional()
+);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(3333),
   HOST: z.string().default("0.0.0.0"),
+  BASE_URL: optionalUrlSchema,
   ALLOWED_ORIGINS: z.string().default("http://localhost:3000,http://127.0.0.1:3000"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(1000),
@@ -40,7 +54,7 @@ const Env = Object.freeze({
   nodeEnv: parsedEnv.NODE_ENV,
   port: parsedEnv.PORT,
   host: parsedEnv.HOST,
-  baseUrl: `http://${displayHost}:${parsedEnv.PORT}`,
+  baseUrl: parsedEnv.BASE_URL ?? `http://${displayHost}:${parsedEnv.PORT}`,
   allowedOrigins: parsedEnv.ALLOWED_ORIGINS.split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
