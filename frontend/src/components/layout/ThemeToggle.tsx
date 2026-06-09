@@ -1,16 +1,42 @@
 "use client";
 
-import { useTheme } from "next-themes";
+import { useSyncExternalStore } from "react";
+
+function subscribe(callback: () => void): () => void {
+  window.addEventListener("themechange", callback);
+  return () => window.removeEventListener("themechange", callback);
+}
+
+function getSnapshot(): "light" | "dark" {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
+function getServerSnapshot(): "light" | "dark" {
+  return "light";
+}
 
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const isDark = theme === "dark";
+
+  function toggle() {
+    const next = isDark ? "light" : "dark";
+    document.documentElement.classList.toggle("dark", next === "dark");
+
+    try {
+      localStorage.setItem("theme", next);
+    } catch {
+      // localStorage indisponivel: a escolha apenas nao persiste.
+    }
+
+    window.dispatchEvent(new Event("themechange"));
+  }
 
   return (
     <button
       type="button"
       aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={toggle}
       className="inline-flex size-9 items-center justify-center rounded-md text-zinc-600 transition-colors hover:bg-black/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-foreground"
     >
       {isDark ? (
