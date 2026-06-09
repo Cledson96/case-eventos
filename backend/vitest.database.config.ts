@@ -2,8 +2,7 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "vitest/config";
 
-const defaultDatabaseTestUrl =
-  "postgresql://case_eventos:case_eventos@localhost:5432/case_eventos?schema=test";
+import { defaultDatabaseTestUrl } from "./scripts/database/test-database-url";
 
 process.env.NODE_ENV = "test";
 process.env.API_TOKEN ??= "case-eventos-test-token";

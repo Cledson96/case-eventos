@@ -2,14 +2,15 @@ import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import process from "node:process";
 
-const defaultDatabaseTestUrl =
-  "postgresql://case_eventos:case_eventos@localhost:5432/case_eventos?schema=test";
+import { ensureTestDatabaseExists, resolveDatabaseTestUrl } from "./test-database-url";
+
+const databaseTestUrl = resolveDatabaseTestUrl(process.env);
 
 const commandEnv = {
   ...process.env,
   NODE_ENV: "test",
   API_TOKEN: process.env.API_TOKEN ?? "case-eventos-test-token",
-  DATABASE_URL: process.env.DATABASE_TEST_URL ?? defaultDatabaseTestUrl,
+  DATABASE_URL: databaseTestUrl,
   REDIS_URL: process.env.REDIS_URL ?? "",
   CACHE_TTL_SECONDS: process.env.CACHE_TTL_SECONDS ?? "60",
 };
@@ -66,6 +67,7 @@ async function run(binary: string, args: string[]): Promise<void> {
 }
 
 try {
+  await ensureTestDatabaseExists(databaseTestUrl);
   await run("prisma", ["migrate", "deploy"]);
   await run("vitest", ["run", "--config", "vitest.database.config.ts"]);
 } catch (error) {

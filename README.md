@@ -75,7 +75,7 @@ Variaveis principais:
 PORT=3333
 API_TOKEN=case-eventos-dev-token
 DATABASE_URL=postgresql://case_eventos:case_eventos@localhost:5432/case_eventos?schema=public
-DATABASE_TEST_URL=postgresql://case_eventos:case_eventos@localhost:5432/case_eventos?schema=test
+DATABASE_TEST_URL=postgresql://case_eventos:case_eventos@localhost:5432/case_eventos_test?schema=public
 REDIS_URL=redis://localhost:6379
 CACHE_TTL_SECONDS=60
 ```
