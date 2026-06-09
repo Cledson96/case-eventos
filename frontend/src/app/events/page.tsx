@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { buttonPrimary } from "@/components/ui/styles";
 import { eventsService } from "@/services/events";
 import { EmptyState } from "./components/EmptyState";
 import { EventCard } from "./components/EventCard";
@@ -18,10 +19,7 @@ export default async function EventsPage() {
     <main className="mx-auto w-full max-w-5xl px-6 py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Eventos</h1>
-        <Link
-          href="/events/new"
-          className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
-        >
+        <Link href="/events/new" className={buttonPrimary}>
           Novo evento
         </Link>
       </div>
@@ -29,7 +27,7 @@ export default async function EventsPage() {
       {events.length === 0 ? (
         <EmptyState />
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-4 sm:grid-cols-2">
           {events.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}
