@@ -25,6 +25,7 @@ ENV HOST=0.0.0.0
 ENV PORT=3333
 
 COPY --from=build --chown=app:app /app/dist ./dist
+COPY --from=build --chown=app:app /app/src/generated ./src/generated
 COPY --chown=app:app prisma ./prisma
 COPY --chown=app:app prisma.config.ts ./
 
