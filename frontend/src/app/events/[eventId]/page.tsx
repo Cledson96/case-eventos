@@ -84,7 +84,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
       )}
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
-        <section id="participantes" className="scroll-mt-20">
+        <section id="participantes" className="min-w-0 scroll-mt-20">
           <div className="mb-4 flex items-center gap-2">
             <Typography variant="section">Participantes</Typography>
             <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand-strong">

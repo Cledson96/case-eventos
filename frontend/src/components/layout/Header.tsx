@@ -17,10 +17,13 @@ export function Header() {
       <nav className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-3">
         <Link
           href="/"
-          className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          aria-label="Case Eventos"
+          className="flex shrink-0 items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <BrandMark />
-          <span className="text-lg font-semibold tracking-tight">Case Eventos</span>
+          <span className="hidden text-lg font-semibold tracking-tight sm:inline">
+            Case Eventos
+          </span>
         </Link>
 
         <div className="flex items-center gap-1 sm:gap-2">
@@ -32,7 +35,7 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                   active
                     ? "text-brand-strong"
                     : "text-zinc-600 hover:text-foreground dark:text-zinc-400 dark:hover:text-foreground"
