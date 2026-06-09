@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { BackLink } from "@/components/layout/BackLink";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { DateTile } from "@/components/ui/DateTile";
+import { Typography } from "@/components/ui/Typography";
 import { eventsService } from "@/services/events";
 import type { Event } from "@/types";
 import { AppDate } from "@/utils/date";
@@ -49,25 +50,25 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       <header className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
         <DateTile date={event.date} size="lg" />
         <div className="min-w-0">
-          <h1 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
+          <Typography variant="title" className="sm:text-3xl">
             {event.name}
-          </h1>
-          <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+          </Typography>
+          <Typography variant="body-muted" className="mt-1.5">
             {AppDate.format(event.date)}
-          </p>
+          </Typography>
         </div>
       </header>
 
       {event.description && (
-        <p className="mt-6 max-w-prose whitespace-pre-line text-pretty text-zinc-700 dark:text-zinc-300">
+        <Typography variant="body" className="mt-6 max-w-prose whitespace-pre-line text-pretty">
           {event.description}
-        </p>
+        </Typography>
       )}
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
         <section>
           <div className="mb-4 flex items-center gap-2">
-            <h2 className="text-lg font-semibold">Participantes</h2>
+            <Typography variant="section">Participantes</Typography>
             <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand-strong">
               {participants.length}
             </span>
@@ -77,10 +78,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
         <aside>
           <div className="rounded-xl border border-black/10 p-5 lg:sticky lg:top-20 dark:border-white/15">
-            <h2 className="text-base font-semibold">Inscrever participante</h2>
-            <p className="mb-4 mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            <Typography variant="subsection">Inscrever participante</Typography>
+            <Typography variant="body-muted" className="mb-4 mt-1">
               Adicione alguem a lista deste evento.
-            </p>
+            </Typography>
             <SubscribeParticipantForm eventId={eventId} />
           </div>
         </aside>

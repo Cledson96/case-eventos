@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useToast } from "@/components/providers/ToastProvider";
 import { DateTile } from "@/components/ui/DateTile";
 import { TextField } from "@/components/ui/TextField";
+import { Typography } from "@/components/ui/Typography";
 import { buttonPrimary, buttonSecondary } from "@/components/ui/styles";
 import { AppDate } from "@/utils/date";
 import { extractErrorMessage } from "@/utils/error";
@@ -125,7 +126,9 @@ export function CreateEventForm() {
 
       <aside>
         <div className="lg:sticky lg:top-20">
-          <p className="mb-2 text-sm font-medium text-zinc-500">Previa</p>
+          <Typography as="p" variant="label" className="mb-2 text-zinc-500">
+            Previa
+          </Typography>
           <div className="flex gap-4 rounded-xl border border-black/10 p-5 dark:border-white/15">
             {values.date ? (
               <DateTile date={values.date} />
@@ -149,16 +152,20 @@ export function CreateEventForm() {
             )}
 
             <div className="min-w-0 flex-1">
-              <p className={`truncate font-medium ${values.name ? "" : "text-zinc-400"}`}>
+              <Typography
+                variant="card-title"
+                as="p"
+                className={`truncate ${values.name ? "" : "text-zinc-400"}`}
+              >
                 {values.name || "Nome do evento"}
-              </p>
-              <p className="mt-1 truncate text-sm text-zinc-600 dark:text-zinc-400">
+              </Typography>
+              <Typography variant="body-muted" as="p" className="mt-1 truncate">
                 {values.date ? AppDate.weekdayTime(values.date) : "Selecione a data"}
-              </p>
+              </Typography>
               {values.description && (
-                <p className="mt-1 line-clamp-2 text-sm text-zinc-700 dark:text-zinc-300">
+                <Typography variant="body-sm" as="p" className="mt-1 line-clamp-2">
                   {values.description}
-                </p>
+                </Typography>
               )}
             </div>
           </div>

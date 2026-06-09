@@ -1,3 +1,4 @@
+import { Typography } from "@/components/ui/Typography";
 import type { EventParticipant } from "@/types";
 import { AppDate } from "@/utils/date";
 
@@ -18,10 +19,10 @@ export function ParticipantList({ participants }: { participants: EventParticipa
   if (participants.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-black/15 p-8 text-center dark:border-white/20">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Nenhum participante inscrito ainda.
-        </p>
-        <p className="mt-1 text-sm text-zinc-500">Use o formulario para adicionar o primeiro.</p>
+        <Typography variant="body-muted">Nenhum participante inscrito ainda.</Typography>
+        <Typography variant="body-muted" className="mt-1">
+          Use o formulario para adicionar o primeiro.
+        </Typography>
       </div>
     );
   }
@@ -38,15 +39,17 @@ export function ParticipantList({ participants }: { participants: EventParticipa
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">{participant.name}</p>
-            <p className="truncate text-sm text-zinc-600 dark:text-zinc-400">
+            <Typography variant="card-title" as="p" className="truncate">
+              {participant.name}
+            </Typography>
+            <Typography variant="body-muted" as="p" className="truncate">
               {participant.email} · {participant.phone}
-            </p>
+            </Typography>
           </div>
 
-          <span className="hidden shrink-0 text-xs text-zinc-500 sm:block">
+          <Typography variant="caption" className="hidden shrink-0 sm:block">
             {AppDate.shortDate(participant.registeredAt)}
-          </span>
+          </Typography>
         </li>
       ))}
     </ul>

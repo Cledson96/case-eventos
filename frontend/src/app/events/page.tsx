@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageContainer } from "@/components/layout/PageContainer";
+import { Typography } from "@/components/ui/Typography";
 import { buttonPrimary } from "@/components/ui/styles";
 import { eventsService } from "@/services/events";
 import { EmptyState } from "./components/EmptyState";
@@ -19,7 +20,7 @@ export default async function EventsPage() {
   return (
     <PageContainer className="py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Eventos</h1>
+        <Typography variant="title">Eventos</Typography>
         <Link href="/events/new" className={buttonPrimary}>
           Novo evento
         </Link>

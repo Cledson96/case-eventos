@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { DateTile } from "@/components/ui/DateTile";
+import { Typography } from "@/components/ui/Typography";
 import type { Event } from "@/types";
 import { AppDate } from "@/utils/date";
 
@@ -14,15 +15,16 @@ export function EventCard({ event }: { event: Event }) {
         <DateTile date={event.date} />
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h2 className="truncate font-medium transition-colors group-hover:text-brand-strong">
+          <Typography
+            variant="card-title"
+            className="truncate transition-colors group-hover:text-brand-strong"
+          >
             {event.name}
-          </h2>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {AppDate.weekdayTime(event.date)}
-          </p>
-          <p className="line-clamp-2 text-sm text-zinc-700 dark:text-zinc-300">
+          </Typography>
+          <Typography variant="body-muted">{AppDate.weekdayTime(event.date)}</Typography>
+          <Typography variant="body-sm" className="line-clamp-2">
             {event.description}
-          </p>
+          </Typography>
         </div>
       </Link>
     </li>

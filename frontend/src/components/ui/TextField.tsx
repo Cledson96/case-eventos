@@ -1,5 +1,6 @@
 import type { HTMLInputTypeAttribute } from "react";
 
+import { Typography } from "@/components/ui/Typography";
 import { fieldControlClass, fieldLabel } from "@/components/ui/styles";
 
 type CommonProps = {
@@ -71,9 +72,9 @@ export function TextField(props: TextFieldProps) {
       )}
 
       {error ? (
-        <p id={errorId} role="alert" className="mt-1 text-sm text-red-700 dark:text-red-400">
+        <Typography as="p" variant="error" id={errorId} role="alert" className="mt-1">
           {error}
-        </p>
+        </Typography>
       ) : null}
     </div>
   );
