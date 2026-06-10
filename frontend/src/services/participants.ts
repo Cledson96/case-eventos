@@ -17,6 +17,10 @@ class ParticipantsService {
 
     return result.data.find((participant) => participant.email === normalized) ?? null;
   }
+
+  public async delete(participantId: string): Promise<Participant> {
+    return httpClient.delete<Participant>(`/participants/${participantId}`);
+  }
 }
 
 export const participantsService = new ParticipantsService();

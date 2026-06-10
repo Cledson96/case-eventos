@@ -2,6 +2,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Typography } from "@/components/ui/Typography";
 import type { EventParticipant } from "@/types";
 import { AppDate } from "@/utils/date";
+import { DeleteParticipantAction } from "./DeleteParticipantAction";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -29,26 +30,34 @@ export function ParticipantList({ participants }: { participants: EventParticipa
   return (
     <ul className="divide-y divide-border">
       {participants.map((participant) => (
-        <li key={participant.id} className="flex items-center gap-3 py-3">
-          <div
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand-strong"
-            aria-hidden="true"
-          >
-            {getInitials(participant.name)}
+        <li key={participant.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand-strong"
+              aria-hidden="true"
+            >
+              {getInitials(participant.name)}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <Typography variant="card-title" as="p" className="truncate">
+                {participant.name}
+              </Typography>
+              <Typography variant="body-muted" as="p" className="truncate">
+                {participant.email} · {participant.phone}
+              </Typography>
+            </div>
           </div>
 
-          <div className="min-w-0 flex-1">
-            <Typography variant="card-title" as="p" className="truncate">
-              {participant.name}
+          <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-end">
+            <Typography variant="caption" className="shrink-0">
+              {AppDate.shortDate(participant.registeredAt)}
             </Typography>
-            <Typography variant="body-muted" as="p" className="truncate">
-              {participant.email} · {participant.phone}
-            </Typography>
+            <DeleteParticipantAction
+              participantId={participant.id}
+              participantName={participant.name}
+            />
           </div>
-
-          <Typography variant="caption" className="hidden shrink-0 sm:block">
-            {AppDate.shortDate(participant.registeredAt)}
-          </Typography>
         </li>
       ))}
     </ul>
