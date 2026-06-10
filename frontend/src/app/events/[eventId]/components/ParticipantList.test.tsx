@@ -49,6 +49,20 @@ describe("ParticipantList", () => {
     expect(screen.getByText(/maria@example.com/)).toBeInTheDocument();
   });
 
+  it("permite ver o telefone completo quando o valor esta truncado", () => {
+    const phone = "+55 (53) 4272-9999 ramal 123456";
+
+    renderList([{ ...participant, phone }]);
+
+    const phoneButton = screen.getByRole("button", {
+      name: `Telefone de Maria Silva: ${phone}`,
+    });
+
+    fireEvent.click(phoneButton);
+
+    expect(screen.getByRole("tooltip")).toHaveTextContent(phone);
+  });
+
   it("exibe estado vazio quando nao ha participantes", () => {
     renderList([]);
 

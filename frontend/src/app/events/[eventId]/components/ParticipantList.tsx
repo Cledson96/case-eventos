@@ -2,6 +2,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Typography } from "@/components/ui/Typography";
 import type { EventParticipant } from "@/types";
 import { AppDate } from "@/utils/date";
+import { ParticipantContactValue } from "./ParticipantContactValue";
 import { DeleteParticipantAction } from "./DeleteParticipantAction";
 
 function getInitials(name: string): string {
@@ -57,9 +58,18 @@ export function ParticipantList({
               <Typography variant="card-title" as="p" className="truncate">
                 {participant.name}
               </Typography>
-              <Typography variant="body-muted" as="p" className="truncate">
-                {participant.email} · {participant.phone}
-              </Typography>
+              <div className="mt-0.5 grid min-w-0 gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+                <ParticipantContactValue
+                  label={`E-mail de ${participant.name}`}
+                  value={participant.email}
+                  className="max-w-full sm:max-w-[min(42vw,26rem)]"
+                />
+                <ParticipantContactValue
+                  label={`Telefone de ${participant.name}`}
+                  value={participant.phone}
+                  className="max-w-full sm:max-w-[16rem]"
+                />
+              </div>
             </div>
           </div>
 
