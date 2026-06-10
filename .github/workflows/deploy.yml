@@ -1,0 +1,399 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Ambiente de deploy
+        required: true
+        type: choice
+        default: development
+        options:
+          - development
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Resolve ambiente
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_environment: ${{ steps.resolve.outputs.deploy_environment }}
+      latest_tag: ${{ steps.resolve.outputs.latest_tag }}
+    steps:
+      - id: resolve
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            deploy_environment="${{ inputs.target }}"
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            deploy_environment="production"
+          else
+            deploy_environment="development"
+          fi
+
+          if [ "${deploy_environment}" = "production" ] && [ "${{ github.ref_name }}" != "main" ]; then
+            echo "Deploy de production deve usar a branch main." >&2
+            exit 1
+          fi
+
+          if [ "${deploy_environment}" = "development" ] && [ "${{ github.ref_name }}" != "development" ]; then
+            echo "Deploy de development deve usar a branch development." >&2
+            exit 1
+          fi
+
+          echo "deploy_environment=${deploy_environment}" >> "$GITHUB_OUTPUT"
+          echo "latest_tag=${deploy_environment}-latest" >> "$GITHUB_OUTPUT"
+
+  backend-checks:
+    name: Backend checks
+    runs-on: ubuntu-latest
+    needs: resolve
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: case_eventos
+          POSTGRES_PASSWORD: case_eventos
+          POSTGRES_DB: case_eventos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U case_eventos -d case_eventos"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      API_TOKEN: case-eventos-test-token
+      DATABASE_URL: postgresql://case_eventos:case_eventos@localhost:5432/case_eventos?schema=public
+      DATABASE_TEST_URL: postgresql://case_eventos:case_eventos@localhost:5432/case_eventos_test?schema=public
+      REDIS_URL: redis://localhost:6379
+      CACHE_TTL_SECONDS: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+        working-directory: backend
+
+      - run: npm run db:generate
+        working-directory: backend
+
+      - run: npm run lint
+        working-directory: backend
+
+      - run: npm run typecheck
+        working-directory: backend
+
+      - run: npm test
+        working-directory: backend
+
+      - run: npm run test:database
+        working-directory: backend
+
+      - run: npm run build
+        working-directory: backend
+
+  frontend-checks:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    needs: resolve
+    env:
+      API_URL: http://localhost:3333
+      API_TOKEN: case-eventos-test-token
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+        working-directory: frontend
+
+      - run: npm run lint
+        working-directory: frontend
+
+      - run: npm run typecheck
+        working-directory: frontend
+
+      - run: npm test
+        working-directory: frontend
+
+      - run: npm run build
+        working-directory: frontend
+
+  build-images:
+    name: Build imagens
+    runs-on: ubuntu-latest
+    needs:
+      - resolve
+      - backend-checks
+      - frontend-checks
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      backend_image: ${{ steps.images.outputs.backend_image }}
+      frontend_image: ${{ steps.images.outputs.frontend_image }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Login no GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: images
+        name: Preparar tags
+        shell: bash
+        run: |
+          repository="${GITHUB_REPOSITORY,,}"
+          backend_image="ghcr.io/${repository}-backend"
+          frontend_image="ghcr.io/${repository}-frontend"
+
+          {
+            echo "backend_image=${backend_image}:${GITHUB_SHA}"
+            echo "frontend_image=${frontend_image}:${GITHUB_SHA}"
+            echo "backend_tags<<EOF"
+            echo "${backend_image}:${GITHUB_SHA}"
+            echo "${backend_image}:${{ needs.resolve.outputs.latest_tag }}"
+            echo "EOF"
+            echo "frontend_tags<<EOF"
+            echo "${frontend_image}:${GITHUB_SHA}"
+            echo "${frontend_image}:${{ needs.resolve.outputs.latest_tag }}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build e push do backend
+        uses: docker/build-push-action@v7
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.images.outputs.backend_tags }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build e push do frontend
+        uses: docker/build-push-action@v7
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.images.outputs.frontend_tags }}
+          build-args: |
+            API_URL=http://localhost:3333
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  deploy:
+    name: Deploy VPS
+    runs-on: ubuntu-latest
+    needs:
+      - resolve
+      - build-images
+    environment: ${{ needs.resolve.outputs.deploy_environment }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Preparar chave SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        shell: bash
+        run: |
+          : "${VPS_HOST:?VPS_HOST deve ser configurado em secrets}"
+          : "${VPS_SSH_KEY:?VPS_SSH_KEY deve ser configurado em secrets}"
+
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${VPS_SSH_KEY}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${VPS_PORT}" -H "${VPS_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Gerar arquivos de ambiente
+        env:
+          DEPLOY_ENVIRONMENT: ${{ needs.resolve.outputs.deploy_environment }}
+          BACKEND_IMAGE: ${{ needs.build-images.outputs.backend_image }}
+          FRONTEND_IMAGE: ${{ needs.build-images.outputs.frontend_image }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          COMPOSE_PROJECT_NAME: ${{ vars.COMPOSE_PROJECT_NAME }}
+          FRONTEND_DOMAIN: ${{ vars.FRONTEND_DOMAIN }}
+          BACKEND_DOMAIN: ${{ vars.BACKEND_DOMAIN }}
+          BASE_URL: ${{ vars.BASE_URL }}
+          FRONTEND_PORT: ${{ vars.FRONTEND_PORT || '3000' }}
+          BACKEND_PORT: ${{ vars.BACKEND_PORT || '3333' }}
+          FRONTEND_PUBLIC_URL: ${{ vars.FRONTEND_PUBLIC_URL }}
+          FRONTEND_INTERNAL_API_URL: ${{ vars.FRONTEND_INTERNAL_API_URL || 'http://backend:3333' }}
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+          RATE_LIMIT_WINDOW_MS: ${{ vars.RATE_LIMIT_WINDOW_MS || '900000' }}
+          RATE_LIMIT_MAX: ${{ vars.RATE_LIMIT_MAX || '1000' }}
+          BODY_LIMIT: ${{ vars.BODY_LIMIT || '10mb' }}
+          LOG_LEVEL: ${{ vars.LOG_LEVEL || 'info' }}
+          CACHE_TTL_SECONDS: ${{ vars.CACHE_TTL_SECONDS || '60' }}
+          RUN_SEED_ON_DEPLOY: ${{ vars.RUN_SEED_ON_DEPLOY || 'false' }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER || 'case_eventos' }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB || 'case_eventos' }}
+          CERTBOT_EMAIL: ${{ vars.CERTBOT_EMAIL || secrets.CERTBOT_EMAIL || '' }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN || secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          : "${FRONTEND_DOMAIN:?FRONTEND_DOMAIN deve ser configurado em vars}"
+          : "${BACKEND_DOMAIN:?BACKEND_DOMAIN deve ser configurado em vars}"
+          : "${API_TOKEN:?API_TOKEN deve ser configurado em secrets}"
+          : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD deve ser configurado em secrets}"
+
+          deploy_path="${DEPLOY_PATH:-/opt/case-eventos-${DEPLOY_ENVIRONMENT}}"
+          compose_project_name="${COMPOSE_PROJECT_NAME:-case-eventos-${DEPLOY_ENVIRONMENT}}"
+          frontend_public_url="${FRONTEND_PUBLIC_URL:-https://${FRONTEND_DOMAIN}}"
+          backend_public_url="${BASE_URL:-https://${BACKEND_DOMAIN}}"
+          allowed_origins="${ALLOWED_ORIGINS:-${frontend_public_url}}"
+
+          if [ -n "${DATABASE_URL}" ]; then
+            database_url="${DATABASE_URL}"
+          else
+            database_url="$(python3 - <<'PY'
+          import os
+          from urllib.parse import quote
+
+          user = quote(os.environ["POSTGRES_USER"], safe="")
+          password = quote(os.environ["POSTGRES_PASSWORD"], safe="")
+          database = os.environ["POSTGRES_DB"]
+
+          print(f"postgresql://{user}:{password}@postgres:5432/{database}?schema=public")
+          PY
+          )"
+          fi
+
+          cat > /tmp/case-eventos.env << EOF
+          DEPLOY_ENVIRONMENT=${DEPLOY_ENVIRONMENT}
+          COMPOSE_PROJECT_NAME=${compose_project_name}
+          BACKEND_IMAGE=${BACKEND_IMAGE}
+          FRONTEND_IMAGE=${FRONTEND_IMAGE}
+          FRONTEND_PORT=${FRONTEND_PORT}
+          BACKEND_PORT=${BACKEND_PORT}
+          POSTGRES_USER=${POSTGRES_USER}
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          POSTGRES_DB=${POSTGRES_DB}
+          EOF
+
+          cat > /tmp/case-eventos.backend.env << EOF
+          NODE_ENV=production
+          PORT=3333
+          HOST=0.0.0.0
+          BASE_URL=${backend_public_url}
+          ALLOWED_ORIGINS=${allowed_origins}
+          RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS}
+          RATE_LIMIT_MAX=${RATE_LIMIT_MAX}
+          BODY_LIMIT=${BODY_LIMIT}
+          LOG_LEVEL=${LOG_LEVEL}
+          API_TOKEN=${API_TOKEN}
+          DATABASE_URL=${database_url}
+          REDIS_URL=redis://redis:6379
+          CACHE_TTL_SECONDS=${CACHE_TTL_SECONDS}
+          RUN_SEED_ON_DEPLOY=${RUN_SEED_ON_DEPLOY}
+          EOF
+
+          cat > /tmp/case-eventos.frontend.env << EOF
+          NODE_ENV=production
+          NEXT_TELEMETRY_DISABLED=1
+          HOSTNAME=0.0.0.0
+          PORT=3000
+          API_URL=${FRONTEND_INTERNAL_API_URL}
+          API_TOKEN=${API_TOKEN}
+          EOF
+
+          cat > /tmp/case-eventos.deploy.env << EOF
+          DEPLOY_PATH=${deploy_path}
+          DEPLOY_ENVIRONMENT=${DEPLOY_ENVIRONMENT}
+          COMPOSE_PROJECT_NAME=${compose_project_name}
+          FRONTEND_DOMAIN=${FRONTEND_DOMAIN}
+          BACKEND_DOMAIN=${BACKEND_DOMAIN}
+          FRONTEND_PORT=${FRONTEND_PORT}
+          BACKEND_PORT=${BACKEND_PORT}
+          CERTBOT_EMAIL=${CERTBOT_EMAIL}
+          GHCR_USER=${GHCR_USER}
+          GHCR_TOKEN=${GHCR_TOKEN}
+          EOF
+
+          sed -i 's/^          //' /tmp/case-eventos.env /tmp/case-eventos.backend.env /tmp/case-eventos.frontend.env /tmp/case-eventos.deploy.env
+          chmod 600 /tmp/case-eventos.env /tmp/case-eventos.backend.env /tmp/case-eventos.frontend.env /tmp/case-eventos.deploy.env
+
+      - name: Enviar arquivos e executar deploy
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        shell: bash
+        run: |
+          : "${VPS_HOST:?VPS_HOST deve ser configurado em secrets}"
+          : "${VPS_USER:?VPS_USER deve ser configurado em secrets}"
+
+          SSH_CMD="ssh -i ~/.ssh/id_ed25519 -p ${VPS_PORT}"
+          SCP_CMD="scp -i ~/.ssh/id_ed25519 -P ${VPS_PORT}"
+
+          tar -czf /tmp/case-eventos-infra.tgz deploy scripts
+
+          ${SCP_CMD} /tmp/case-eventos-infra.tgz "${VPS_USER}@${VPS_HOST}:/tmp/case-eventos-infra.tgz"
+          ${SCP_CMD} /tmp/case-eventos.env "${VPS_USER}@${VPS_HOST}:/tmp/case-eventos.env"
+          ${SCP_CMD} /tmp/case-eventos.backend.env "${VPS_USER}@${VPS_HOST}:/tmp/case-eventos.backend.env"
+          ${SCP_CMD} /tmp/case-eventos.frontend.env "${VPS_USER}@${VPS_HOST}:/tmp/case-eventos.frontend.env"
+          ${SCP_CMD} /tmp/case-eventos.deploy.env "${VPS_USER}@${VPS_HOST}:/tmp/case-eventos.deploy.env"
+
+          ${SSH_CMD} "${VPS_USER}@${VPS_HOST}" <<'REMOTE'
+          set -euo pipefail
+
+          sudo_run() {
+            if [ "$(id -u)" -eq 0 ]; then "$@"; else sudo -n "$@"; fi
+          }
+
+          set -a
+          . /tmp/case-eventos.deploy.env
+          set +a
+
+          sudo_run mkdir -p "${DEPLOY_PATH}"
+          sudo_run tar -xzf /tmp/case-eventos-infra.tgz -C "${DEPLOY_PATH}"
+          sudo_run cp /tmp/case-eventos.env "${DEPLOY_PATH}/.env"
+          sudo_run cp /tmp/case-eventos.backend.env "${DEPLOY_PATH}/.env.backend"
+          sudo_run cp /tmp/case-eventos.frontend.env "${DEPLOY_PATH}/.env.frontend"
+          sudo_run chmod +x "${DEPLOY_PATH}/scripts/deploy-docker.sh"
+          sudo_run env DEPLOY_PATH="${DEPLOY_PATH}" DEPLOY_ENVIRONMENT="${DEPLOY_ENVIRONMENT}" COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}" FRONTEND_DOMAIN="${FRONTEND_DOMAIN}" BACKEND_DOMAIN="${BACKEND_DOMAIN}" FRONTEND_PORT="${FRONTEND_PORT}" BACKEND_PORT="${BACKEND_PORT}" CERTBOT_EMAIL="${CERTBOT_EMAIL}" GHCR_USER="${GHCR_USER}" GHCR_TOKEN="${GHCR_TOKEN}" bash "${DEPLOY_PATH}/scripts/deploy-docker.sh"
+          rm -f /tmp/case-eventos-infra.tgz /tmp/case-eventos.env /tmp/case-eventos.backend.env /tmp/case-eventos.frontend.env /tmp/case-eventos.deploy.env
+          REMOTE

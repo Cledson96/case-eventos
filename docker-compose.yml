@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: case-eventos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: case_eventos
+      POSTGRES_PASSWORD: case_eventos
+      POSTGRES_DB: case_eventos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U case_eventos -d case_eventos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8-alpine
+    container_name: case-eventos-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: case-eventos-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3333
+      HOST: 0.0.0.0
+      ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX: 1000
+      BODY_LIMIT: 10mb
+      LOG_LEVEL: info
+      API_TOKEN: ${API_TOKEN:-case-eventos-dev-token}
+      DATABASE_URL: postgresql://case_eventos:case_eventos@postgres:5432/case_eventos?schema=public
+      REDIS_URL: redis://redis:6379
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-60}
+      RUN_SEED_ON_DEPLOY: ${RUN_SEED_ON_DEPLOY:-false}
+    command: sh -c "npm run db:deploy && if [ \"$${RUN_SEED_ON_DEPLOY:-false}\" = \"true\" ]; then npm run db:seed; fi && npm start"
+    ports:
+      - "3333:3333"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        API_URL: ${FRONTEND_BUILD_API_URL:-http://backend:3333}
+    container_name: case-eventos-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      API_URL: ${FRONTEND_API_URL:-http://backend:3333}
+      API_TOKEN: ${API_TOKEN:-case-eventos-dev-token}
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+  redis_data:

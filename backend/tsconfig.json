@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2023",
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "useUnknownInCatchVariables": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@infrastructure/*": ["./src/infrastructure/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@middlewares/*": ["./src/shared/middlewares/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "tests"]
+}

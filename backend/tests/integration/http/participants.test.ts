@@ -1,0 +1,142 @@
+import request from "supertest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { participantsService } from "@/modules/participants/services";
+import { app } from "@/server";
+import { ConflictError, NotFoundError } from "@/shared/errors";
+import { authHeader } from "./helpers/auth";
+
+vi.mock("@/modules/participants/services", () => ({
+  participantsService: {
+    create: vi.fn(),
+    delete: vi.fn(),
+    list: vi.fn(),
+  },
+}));
+
+const participantOutput = {
+  id: "9a4cd65e-f7ec-4f14-939a-564c87d2f042",
+  name: "Ana Souza",
+  email: "ana@email.com",
+  phone: "11999999999",
+  createdAt: "2026-06-08T12:00:00.000Z",
+  updatedAt: "2026-06-08T12:00:00.000Z",
+};
+
+describe("Participants HTTP", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("deve criar participante com status 201", async () => {
+    vi.mocked(participantsService.create).mockResolvedValue(participantOutput);
+
+    const response = await request(app)
+      .post("/participants")
+      .set(authHeader)
+      .send({
+        name: "Ana Souza",
+        email: "ANA@EMAIL.COM",
+        phone: "11999999999",
+      })
+      .expect(201);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe("Participante criado com sucesso");
+    expect(response.body.data.email).toBe(participantOutput.email);
+    expect(participantsService.create).toHaveBeenCalledWith({
+      name: "Ana Souza",
+      email: "ana@email.com",
+      phone: "11999999999",
+    });
+  });
+
+  it("deve retornar 400 ao criar participante sem campos obrigatorios", async () => {
+    const response = await request(app).post("/participants").set(authHeader).send({}).expect(400);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("Dados da requisicao invalidos");
+    expect(response.body.error.code).toBe(400);
+    expect(response.body.error.details.fieldErrors.name).toContain("Nome e obrigatorio");
+    expect(response.body.error.details.fieldErrors.email).toContain("E-mail e obrigatorio");
+    expect(response.body.error.details.fieldErrors.phone).toContain("Telefone e obrigatorio");
+    expect(participantsService.create).not.toHaveBeenCalled();
+  });
+
+  it("deve retornar 409 quando e-mail ja estiver cadastrado", async () => {
+    vi.mocked(participantsService.create).mockRejectedValue(
+      new ConflictError("E-mail ja cadastrado")
+    );
+
+    const response = await request(app)
+      .post("/participants")
+      .set(authHeader)
+      .send({
+        name: "Ana Souza",
+        email: "ana@email.com",
+        phone: "11999999999",
+      })
+      .expect(409);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("E-mail ja cadastrado");
+    expect(response.body.error.code).toBe(409);
+  });
+
+  it("deve excluir participante com status 200", async () => {
+    vi.mocked(participantsService.delete).mockResolvedValue(participantOutput);
+
+    const response = await request(app)
+      .delete(`/participants/${participantOutput.id}`)
+      .set(authHeader)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe("Participante excluido com sucesso");
+    expect(response.body.data.id).toBe(participantOutput.id);
+    expect(participantsService.delete).toHaveBeenCalledWith({ id: participantOutput.id });
+  });
+
+  it("deve retornar 404 ao excluir participante inexistente", async () => {
+    vi.mocked(participantsService.delete).mockRejectedValue(
+      new NotFoundError("Participante nao encontrado")
+    );
+
+    const response = await request(app)
+      .delete(`/participants/${participantOutput.id}`)
+      .set(authHeader)
+      .expect(404);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("Participante nao encontrado");
+    expect(response.body.error.code).toBe(404);
+  });
+
+  it("deve listar participantes paginados", async () => {
+    vi.mocked(participantsService.list).mockResolvedValue({
+      data: [participantOutput],
+      meta: {
+        page: 1,
+        limit: 20,
+        total: 1,
+        totalPages: 1,
+      },
+    });
+
+    const response = await request(app)
+      .get("/participants?page=1&limit=20&search=ana&sort=email&order=asc")
+      .set(authHeader)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.data).toHaveLength(1);
+    expect(response.body.data.meta.total).toBe(1);
+    expect(participantsService.list).toHaveBeenCalledWith({
+      page: 1,
+      limit: 20,
+      search: "ana",
+      sort: "email",
+      order: "asc",
+    });
+  });
+});

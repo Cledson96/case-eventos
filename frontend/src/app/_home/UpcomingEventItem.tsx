@@ -1,0 +1,30 @@
+import Link from "next/link";
+
+import { Typography } from "@/components/ui/Typography";
+import type { Event } from "@/types";
+import { AppDate } from "@/utils/date";
+
+export function UpcomingEventItem({ event, index }: { event: Event; index: number }) {
+  return (
+    <li
+      className="animate-reveal border-b border-border last:border-0"
+      style={{ animationDelay: `${0.08 + index * 0.07}s` }}
+    >
+      <Link
+        href={`/events/${event.id}`}
+        className="group flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+      >
+        <Typography as="span" variant="card-title" className="sm:min-w-0 sm:truncate">
+          {event.name}
+        </Typography>
+        <Typography
+          as="span"
+          variant="body-muted"
+          className="shrink-0 group-hover:text-zinc-900 dark:group-hover:text-zinc-100"
+        >
+          {AppDate.format(event.date)}
+        </Typography>
+      </Link>
+    </li>
+  );
+}

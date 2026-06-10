@@ -1,0 +1,176 @@
+import type { Server as HttpServer } from "node:http";
+
+import cors from "cors";
+import express, { type Express, type Request, type Response } from "express";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+
+import { cache, database } from "@/infrastructure";
+import { Env } from "@/shared/config";
+import {
+  errorHandler,
+  notFoundHandler,
+  requestContext,
+  responseFormatter,
+  setupSwagger,
+} from "@/shared/middlewares";
+import { appRoutes } from "@/shared/routes";
+import { Logger, httpLogger } from "@/shared/utils";
+
+class App {
+  private readonly app: Express;
+  private server?: HttpServer;
+  private isShuttingDown = false;
+  private readonly shutdownTimeoutMs = 10000;
+
+  public constructor() {
+    this.app = express();
+    this.initializeMiddlewares();
+    this.initializeRoutes();
+    this.initializeErrorHandling();
+  }
+
+  public async start(): Promise<void> {
+    await database.connect();
+    await cache.connect();
+
+    this.server = this.app.listen(Env.port, Env.host, () => {
+      Logger.info(`Servidor iniciado em http://${Env.host}:${Env.port}`);
+    });
+
+    this.configureGracefulShutdown();
+  }
+
+  public get expressApp(): Express {
+    return this.app;
+  }
+
+  private initializeMiddlewares(): void {
+    this.app.use(requestContext);
+    this.app.use(httpLogger);
+    this.app.set("trust proxy", 1);
+    this.app.disable("x-powered-by");
+    this.app.use(
+      rateLimit({
+        windowMs: Env.rateLimitWindowMs,
+        max: Env.rateLimitMax,
+        message: "Muitas requisicoes deste IP, tente novamente em 15 minutos.",
+        standardHeaders: true,
+        legacyHeaders: false,
+      })
+    );
+    this.app.use(helmet());
+    this.app.use(
+      cors({
+        origin: Env.allowedOrigins,
+        credentials: true,
+        allowedHeaders: ["Authorization", "Content-Type", "Charset", "X-Request-Id"],
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      })
+    );
+    this.app.use(express.json({ limit: Env.bodyLimit }));
+    this.app.use(express.urlencoded({ extended: false, limit: Env.bodyLimit }));
+    setupSwagger(this.app);
+    this.app.use(responseFormatter);
+  }
+
+  private initializeRoutes(): void {
+    this.app.get("/livez", (_request: Request, response: Response) => {
+      response.success({ status: "alive" }, "API em execucao");
+    });
+
+    this.app.get("/readyz", (_request: Request, response: Response) => {
+      if (this.isShuttingDown) {
+        response.error("API em encerramento", 503);
+        return;
+      }
+
+      if (!database.isConnected()) {
+        response.error("Banco de dados indisponivel", 503);
+        return;
+      }
+
+      response.success({ status: "ready" }, "API pronta para receber requisicoes");
+    });
+
+    this.app.get("/health", (_request: Request, response: Response) => {
+      response.success(
+        {
+          status: "ok",
+          uptime: process.uptime(),
+          environment: Env.nodeEnv,
+        },
+        "API funcionando corretamente"
+      );
+    });
+
+    this.app.use(appRoutes);
+  }
+
+  private initializeErrorHandling(): void {
+    this.app.use(notFoundHandler);
+    this.app.use(errorHandler);
+  }
+
+  private configureGracefulShutdown(): void {
+    process.on("SIGTERM", () => {
+      void this.shutdown("SIGTERM");
+    });
+
+    process.on("SIGINT", () => {
+      void this.shutdown("SIGINT");
+    });
+
+    process.on("uncaughtException", (error: Error) => {
+      Logger.error("Erro nao capturado", { error });
+      void this.shutdown("uncaughtException");
+    });
+
+    process.on("unhandledRejection", (reason: unknown) => {
+      Logger.error("Promise rejeitada sem tratamento", { reason });
+      void this.shutdown("unhandledRejection");
+    });
+  }
+
+  private async shutdown(signal: string): Promise<void> {
+    this.isShuttingDown = true;
+    Logger.info(`Encerrando servidor: ${signal}`);
+
+    if (!this.server) {
+      await cache.disconnect();
+      await database.disconnect();
+      process.exit(0);
+    }
+
+    const shutdownTimeout = setTimeout(() => {
+      Logger.error("Timeout ao encerrar servidor HTTP", { signal });
+      this.server?.closeIdleConnections?.();
+      this.server?.closeAllConnections?.();
+      process.exit(1);
+    }, this.shutdownTimeoutMs);
+
+    this.server.close((error?: Error) => {
+      clearTimeout(shutdownTimeout);
+
+      if (error) {
+        Logger.error("Erro ao encerrar servidor HTTP", { error });
+        process.exit(1);
+      }
+
+      Promise.all([cache.disconnect(), database.disconnect()])
+        .then(() => {
+          Logger.info("Servidor encerrado com sucesso");
+          process.exit(0);
+        })
+        .catch((disconnectError: unknown) => {
+          Logger.error("Erro ao desconectar banco de dados", { error: disconnectError });
+          process.exit(1);
+        });
+    });
+  }
+}
+
+const Server = new App();
+
+export const app = Server.expressApp;
+export default Server;

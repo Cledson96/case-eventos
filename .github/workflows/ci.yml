@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - development
+  push:
+    branches:
+      - main
+      - development
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: case_eventos
+          POSTGRES_PASSWORD: case_eventos
+          POSTGRES_DB: case_eventos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U case_eventos -d case_eventos"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      API_TOKEN: case-eventos-test-token
+      DATABASE_URL: postgresql://case_eventos:case_eventos@localhost:5432/case_eventos?schema=public
+      DATABASE_TEST_URL: postgresql://case_eventos:case_eventos@localhost:5432/case_eventos_test?schema=public
+      REDIS_URL: redis://localhost:6379
+      CACHE_TTL_SECONDS: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+        working-directory: backend
+
+      - run: npm run db:generate
+        working-directory: backend
+
+      - run: npm run lint
+        working-directory: backend
+
+      - run: npm run typecheck
+        working-directory: backend
+
+      - run: npm test
+        working-directory: backend
+
+      - run: npm run test:database
+        working-directory: backend
+
+      - run: npm run build
+        working-directory: backend
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    env:
+      API_URL: http://localhost:3333
+      API_TOKEN: case-eventos-test-token
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+        working-directory: frontend
+
+      - run: npm run lint
+        working-directory: frontend
+
+      - run: npm run typecheck
+        working-directory: frontend
+
+      - run: npm test
+        working-directory: frontend
+
+      - run: npm run build
+        working-directory: frontend
