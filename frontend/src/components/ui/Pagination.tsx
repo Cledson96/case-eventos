@@ -7,6 +7,7 @@ type PaginationProps = {
   totalPages: number;
   basePath: string;
   hash?: string;
+  query?: Record<string, string | number | undefined>;
 };
 
 const linkClass =
@@ -50,12 +51,24 @@ function ChevronRight() {
   );
 }
 
-export function Pagination({ page, totalPages, basePath, hash = "" }: PaginationProps) {
+export function Pagination({ page, totalPages, basePath, hash = "", query = {} }: PaginationProps) {
   if (totalPages <= 1) {
     return null;
   }
 
-  const hrefFor = (target: number) => `${basePath}?page=${target}${hash}`;
+  const hrefFor = (target: number) => {
+    const params = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(query)) {
+      if (value !== undefined && value !== "") {
+        params.set(key, String(value));
+      }
+    }
+
+    params.set("page", String(target));
+
+    return `${basePath}?${params.toString()}${hash}`;
+  };
   const hasPrev = page > 1;
   const hasNext = page < totalPages;
 

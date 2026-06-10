@@ -17,12 +17,26 @@ function getInitials(name: string): string {
   return (first + last).toUpperCase();
 }
 
-export function ParticipantList({ participants }: { participants: EventParticipant[] }) {
+export function ParticipantList({
+  participants,
+  search = "",
+}: {
+  participants: EventParticipant[];
+  search?: string;
+}) {
   if (participants.length === 0) {
+    const hasSearch = search.trim().length > 0;
+
     return (
       <EmptyState
-        description="Nenhum participante inscrito ainda."
-        hint="Use o formulario para adicionar o primeiro."
+        description={
+          hasSearch ? "Nenhum participante encontrado." : "Nenhum participante inscrito ainda."
+        }
+        hint={
+          hasSearch
+            ? "Tente buscar por outro nome, e-mail ou telefone."
+            : "Use o formulario para adicionar o primeiro."
+        }
       />
     );
   }

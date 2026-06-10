@@ -11,6 +11,7 @@ import type { Event, EventParticipant, PaginationMeta } from "@/types";
 import { AppDate } from "@/utils/date";
 import { extractErrorStatus } from "@/utils/error";
 import { ParticipantList } from "./components/ParticipantList";
+import { ParticipantSearch } from "./components/ParticipantSearch";
 import { SubscribeParticipantForm } from "./components/SubscribeParticipantForm";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 
 type EventDetailPageProps = {
   params: Promise<{ eventId: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 };
 
 type EventDetail = {
@@ -32,13 +33,18 @@ type EventDetail = {
   meta: PaginationMeta;
 };
 
-async function loadEventDetail(eventId: string, page: number): Promise<EventDetail> {
+async function loadEventDetail(
+  eventId: string,
+  page: number,
+  search: string
+): Promise<EventDetail> {
   try {
     const [event, participants] = await Promise.all([
       eventsService.findById(eventId),
       eventsService.listParticipants(eventId, {
         page,
         limit: PARTICIPANTS_PER_PAGE,
+        search: search || undefined,
         sort: "createdAt",
         order: "desc",
       }),
@@ -56,10 +62,11 @@ async function loadEventDetail(eventId: string, page: number): Promise<EventDeta
 
 export default async function EventDetailPage({ params, searchParams }: EventDetailPageProps) {
   const { eventId } = await params;
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, search: searchParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
+  const participantSearch = searchParam?.trim() ?? "";
 
-  const { event, participants, meta } = await loadEventDetail(eventId, page);
+  const { event, participants, meta } = await loadEventDetail(eventId, page, participantSearch);
 
   return (
     <PageContainer className="py-8">
@@ -91,11 +98,13 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
               {meta.total}
             </span>
           </div>
-          <ParticipantList participants={participants} />
+          <ParticipantSearch eventId={eventId} search={participantSearch} />
+          <ParticipantList participants={participants} search={participantSearch} />
           <Pagination
             page={page}
             totalPages={meta.totalPages}
             basePath={`/events/${eventId}`}
+            query={{ search: participantSearch }}
             hash="#participantes"
           />
         </section>
