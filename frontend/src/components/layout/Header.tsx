@@ -18,7 +18,7 @@ export function Header() {
         <Link
           href="/"
           aria-label="Case Eventos"
-          className="flex shrink-0 items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="flex min-h-11 min-w-11 shrink-0 items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <BrandMark />
           <span className="hidden text-lg font-semibold tracking-tight sm:inline">
@@ -35,7 +35,7 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                className={`inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                   active
                     ? "text-brand-strong"
                     : "text-zinc-600 hover:text-foreground dark:text-zinc-400 dark:hover:text-foreground"

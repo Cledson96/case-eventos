@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Pagination } from "@/components/ui/Pagination";
 import { Typography } from "@/components/ui/Typography";
 import { buttonPrimary } from "@/components/ui/styles";
 import { eventsService } from "@/services/events";
@@ -14,8 +15,21 @@ export const metadata: Metadata = {
   title: "Eventos",
 };
 
-export default async function EventsPage() {
-  const { data: events } = await eventsService.list({ sort: "date", order: "asc", limit: 100 });
+const EVENTS_PER_PAGE = 12;
+
+type EventsPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+export default async function EventsPage({ searchParams }: EventsPageProps) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const { data: events, meta } = await eventsService.list({
+    page,
+    limit: EVENTS_PER_PAGE,
+    sort: "date",
+    order: "asc",
+  });
 
   return (
     <PageContainer className="py-8">
@@ -38,6 +52,13 @@ export default async function EventsPage() {
           ))}
         </ul>
       )}
+
+      <Pagination
+        page={page}
+        totalPages={meta.totalPages}
+        basePath="/events"
+        ariaLabel="Paginacao de eventos"
+      />
     </PageContainer>
   );
 }

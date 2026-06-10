@@ -1,4 +1,4 @@
-import { useState, type SyntheticEvent } from "react";
+import { useRef, useState, type SyntheticEvent } from "react";
 
 type Validator = (value: string) => string | null;
 
@@ -20,6 +20,7 @@ export function useForm<T extends Record<string, string>>({
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<FormErrors<T>>({});
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   function setField(field: keyof T, raw: string) {
     const transform = transforms?.[field];
@@ -43,6 +44,10 @@ export function useForm<T extends Record<string, string>>({
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (submittingRef.current) {
+      return;
+    }
+
     const nextErrors: FormErrors<T> = {};
     let valid = true;
 
@@ -61,11 +66,13 @@ export function useForm<T extends Record<string, string>>({
       return;
     }
 
+    submittingRef.current = true;
     setSubmitting(true);
 
     try {
       await onSubmit(values, { reset });
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }

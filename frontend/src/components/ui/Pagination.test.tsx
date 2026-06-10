@@ -10,11 +10,13 @@ describe("Pagination", () => {
         page={2}
         totalPages={4}
         basePath="/events/event-1"
+        ariaLabel="Paginacao de participantes"
         hash="#participantes"
         query={{ search: "maria@example.com" }}
       />
     );
 
+    expect(screen.getByRole("navigation", { name: "Paginacao de participantes" })).toBeVisible();
     expect(screen.getByRole("link", { name: /anterior/i })).toHaveAttribute(
       "href",
       "/events/event-1?search=maria%40example.com&page=1#participantes"

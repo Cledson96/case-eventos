@@ -104,6 +104,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
             page={page}
             totalPages={meta.totalPages}
             basePath={`/events/${eventId}`}
+            ariaLabel="Paginacao de participantes"
             query={{ search: participantSearch }}
             hash="#participantes"
           />

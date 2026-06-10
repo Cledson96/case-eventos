@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ToastProvider } from "@/components/providers/ToastProvider";
@@ -47,6 +47,33 @@ describe("CreateEventForm", () => {
       name: "Show de TI",
       description: "Evento anual",
       date: "2026-06-08T14:30",
+    });
+  });
+
+  it("bloqueia duplo envio enquanto a requisicao esta em andamento", async () => {
+    let resolvePost: (value: { data: unknown }) => void = () => {};
+    post.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolvePost = resolve;
+      })
+    );
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Show de TI" } });
+    fireEvent.change(screen.getByLabelText("Descricao"), { target: { value: "Evento anual" } });
+    fireEvent.change(screen.getByLabelText("Data"), { target: { value: "2026-06-08T14:30" } });
+
+    const submitButton = screen.getByRole("button", { name: /criar evento/i });
+
+    fireEvent.click(submitButton);
+    fireEvent.click(submitButton);
+
+    expect(post).toHaveBeenCalledTimes(1);
+
+    resolvePost({ data: {} });
+
+    await waitFor(() => {
+      expect(screen.getByText("Evento criado com sucesso")).toBeInTheDocument();
     });
   });
 });

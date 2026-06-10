@@ -6,14 +6,16 @@ type PaginationProps = {
   page: number;
   totalPages: number;
   basePath: string;
+  ariaLabel?: string;
   hash?: string;
   query?: Record<string, string | number | undefined>;
 };
 
 const linkClass =
-  "inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:border-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:hover:border-white/50";
+  "inline-flex min-h-11 items-center gap-1 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:border-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:hover:border-white/50";
 
-const disabledClass = "cursor-not-allowed border-border px-3 py-1.5 text-sm font-medium opacity-40";
+const disabledClass =
+  "min-h-11 cursor-not-allowed border-border px-3 py-2 text-sm font-medium opacity-40";
 
 function ChevronLeft() {
   return (
@@ -51,7 +53,14 @@ function ChevronRight() {
   );
 }
 
-export function Pagination({ page, totalPages, basePath, hash = "", query = {} }: PaginationProps) {
+export function Pagination({
+  page,
+  totalPages,
+  basePath,
+  ariaLabel = "Paginacao",
+  hash = "",
+  query = {},
+}: PaginationProps) {
   if (totalPages <= 1) {
     return null;
   }
@@ -73,7 +82,7 @@ export function Pagination({ page, totalPages, basePath, hash = "", query = {} }
   const hasNext = page < totalPages;
 
   return (
-    <nav className="mt-5 flex items-center justify-between" aria-label="Paginacao de participantes">
+    <nav className="mt-5 flex flex-wrap items-center justify-between gap-3" aria-label={ariaLabel}>
       {hasPrev ? (
         <Link href={hrefFor(page - 1)} rel="prev" className={linkClass}>
           <ChevronLeft />
